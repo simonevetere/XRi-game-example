@@ -73,18 +73,21 @@
 
         <div class="map-name" id="map-name">PALUDE</div>
         <button class="btn-enter" onclick="launchGame()">ENTRA</button>
-        <button class="btn-enter" style="position: fixed; top: 2%;right: 2%;" onclick="window.location = window.location">reload</button>
+        <button class="btn-enter" style="position: fixed; top: 2%; right: 2%; padding: 10px 30px; font-size: 1.2rem;" onclick="window.location.reload()">reload</button>
     </div>
 
     <script>
+        // URL Base per i file Raw su GitHub
+        const RAW_MAPS_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/";
+
         const maps = [
-            { id: 'swamp', name: 'PALUDE', img: 'assets/img/swamp_map.png', glb: 'swamp_location.glb' },
-            { id: 'sand', name: 'DESERTO', img: 'assets/img/sand_map.png', glb: 'sands_location.glb' },
-            { id: 'crypt', name: 'CRIPTA', img: 'assets/img/crypt_map.png', glb: 'crypt_location.glb' }
+            { id: 'swamp', name: 'PALUDE', img: 'assets/img/swamp_map.png', glb: RAW_MAPS_BASE + 'swamp_location.glb' },
+            { id: 'sand', name: 'DESERTO', img: 'assets/img/sand_map.png', glb: RAW_MAPS_BASE + 'sands_location.glb' },
+            { id: 'crypt', name: 'CRIPTA', img: 'assets/img/crypt_map.png', glb: RAW_MAPS_BASE + 'crypt_location.glb' }
         ];
 
         let currentIndex = 0;
-        let currentMapInstance = null; // Istanza XRi della mappa 3D
+        let currentMapInstance = null;
         let rotationAngle = 0;
 
         async function updateMapAR() {
@@ -94,14 +97,14 @@
             document.getElementById('map-img').src = mapData.img;
             document.getElementById('map-name').innerText = mapData.name;
 
-            // 2. Aggiorna AR (Gestione Istanze)
+            // 2. Aggiorna AR
             if (window.XRi) {
-                XRi.clearAll(); // Puliamo la mappa precedente
+                XRi.clearAll();
                 
-                // Spawna la nuova mappa e salva l'istanza
+                // Spawna la nuova mappa dal nuovo percorso RAW
                 currentMapInstance = XRi.spawn("preview_map", mapData.glb, 0.3);
                 
-                // Posizionala (piccola, davanti all'utente come anteprima)
+                // Posizionamento anteprima
                 await currentMapInstance.move({ x: 0, y: 1, z: 0.5 });
             }
         }
@@ -111,7 +114,6 @@
             updateMapAR();
         }
 
-        // Loop di rotazione per la mappa in anteprima
         function animate() {
             if (currentMapInstance) {
                 rotationAngle += 0.5;
@@ -122,14 +124,16 @@
 
         function launchGame() {
             const selectedMap = maps[currentIndex];
-            // Passiamo la mappa scelta alla pagina dei personaggi tramite URL
-            window.location.href = `personaggi.html?map=${selectedMap.glb}`;
+            // Passiamo l'URL completo del GLB alla pagina successiva
+            window.location.href = `personaggi.html?map=${encodeURIComponent(selectedMap.glb)}`;
         }
 
         window.onload = () => {
-            XRi.initMultiplayer();
-            updateMapAR();
-            animate();
+            if (window.XRi) {
+                XRi.initMultiplayer();
+                updateMapAR();
+                animate();
+            }
         };
     </script>
 </body>

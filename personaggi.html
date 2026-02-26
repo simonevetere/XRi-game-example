@@ -18,7 +18,7 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image: url('assets/img/background.png');
             background-size: cover; background-position: center;
-            filter: brightness(0.4) blur(8px); /* Blur per non disturbare la vista degli eroi 3D */
+            filter: brightness(0.4) blur(8px); 
             z-index: 1;
         }
 
@@ -51,7 +51,7 @@
 
     <div id="ui-header">
         <h1>TOCCA IL TUO EROE</h1>
-            <button class="btn btn-yes" style="position: fixed; top: 2%;right: 2%;" onclick="window.location = window.location">reload</button>
+        <button class="btn btn-yes" style="position: fixed; top: 2%; right: 2%; padding: 10px 25px; font-size: 1rem;" onclick="window.location.reload()">reload</button>
     </div>
 
     <div id="confirm-box" class="hidden">
@@ -64,6 +64,9 @@
     </div>
 
     <script>
+        // URL Base per i personaggi dal tuo GitHub
+        const HERO_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/playable/";
+        
         let heroes = { knight: null, troll: null, archer: null };
         let selectedHero = null;
 
@@ -74,20 +77,21 @@
             if(window.XRi) {
                 XRi.initMultiplayer();
                 XRi.clearAll();
+                // La mappa arriva come URL completo dalla pagina precedente o usa il default
                 XRi.spawn("map", mapFile, 0.8);
 
                 setTimeout(async () => {
-                    // SPAWN E SALVATAGGIO ISTANZE
-                    heroes.knight = XRi.spawn("knight", "knight.glb", 1.2);
-                    heroes.troll = XRi.spawn("troll", "troll.glb", 1.2);
-                    heroes.archer = XRi.spawn("archer", "archer.glb", 1.2);
+                    // SPAWN E SALVATAGGIO ISTANZE dai percorsi GitHub
+                    heroes.knight = XRi.spawn("knight", HERO_BASE + "knight.glb", 1.2);
+                    heroes.troll = XRi.spawn("troll", HERO_BASE + "troll.glb", 1.2);
+                    heroes.archer = XRi.spawn("archer", HERO_BASE + "archer.glb", 1.2);
 
-                    // POSIZIONAMENTO (come nel tuo debugger)
+                    // POSIZIONAMENTO
                     await heroes.knight.move({ x: -2.0, y: 0, z: 3.5 });
                     await heroes.troll.move({ x: 0, y: 0, z: 4.0 });
                     await heroes.archer.move({ x: 2.0, y: 0, z: 3.5 });
 
-                    // ANIMAZIONI
+                    // ANIMAZIONI (Passiamo stringa vuota per default)
                     heroes.knight.startAnimation("");
                     heroes.troll.startAnimation("");
                     heroes.archer.startAnimation("");
@@ -95,7 +99,6 @@
             }
         }
 
-        // LOGICA MESSAGGI (Sistema GRAB dal tuo debugger)
         function handleUnityMessage(e) {
             try {
                 const d = JSON.parse(e.data);
@@ -103,7 +106,7 @@
                     const id = d.id;
                     if (heroes[id]) {
                         selectedHero = heroes[id];
-                        selectedHero.startAnimation("");
+                        selectedHero.startAnimation(""); // Trigger animazione default al tocco
                         
                         const names = { knight: "Guerriero", troll: "Troll", archer: "Arciere" };
                         document.getElementById('char-name-display').innerText = names[id];
@@ -113,6 +116,7 @@
             } catch(err) {}
         }
 
+        // Setup Vuplex
         if (window.vuplex) {
             window.vuplex.addEventListener('message', handleUnityMessage);
         } else {
@@ -128,17 +132,18 @@
         }
 
         async function confirmChoice() {
-            // Effetto: gli altri eroi spariscono
+            // Elimina gli altri eroi
             for (let key in heroes) {
                 if (heroes[key] && heroes[key] !== selectedHero) {
                     heroes[key].destroy();
                 }
             }
+            
             selectedHero.startAnimation("");
             document.getElementById('confirm-box').innerHTML = "<h2>AVVENTURA INIZIATA!</h2>";
             
             setTimeout(() => {
-                document.body.style.display = 'none'; // Nasconde l'interfaccia per giocare
+                document.body.style.display = 'none';
             }, 3000);
         }
 
