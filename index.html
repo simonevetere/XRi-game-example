@@ -79,7 +79,7 @@
 
         <div class="map-name" id="map-name">CARICAMENTO...</div>
         <button class="btn-enter" onclick="launchGame()">ENTRA</button>
-        <button class="btn-enter" style="position: fixed; top: 2%; right: 2%; padding: 10px 30px; font-size: 1.2rem;" onclick="window.location.reload()">RELOAD</button>
+        <button class="btn-enter" sclass="debug-close-btn" onclick="window.location.reload()">RELOAD</button>
     </div>
 
     <script>
@@ -115,7 +115,7 @@
 
         currentMapInstance = await XRi.spawn(mapData.id, mapData.glb, 0.5);
 
-        await currentMapInstance.setPosition({ x: -0.5, y: 1, z: 0.5 }, 0);
+        await currentMapInstance.setPosition({ x: -0.2, y: 1, z: 0.5 }, 0);
         
         await currentMapInstance.resetRotation(0);
         
