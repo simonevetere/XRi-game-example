@@ -147,16 +147,29 @@
             document.getElementById('map-name').innerText = "Downloading...";
 
             if (window.XRi) {
+                // 1. Pulizia totale prima di iniziare
                 XRi.clearAll();
-                // Importante: Await qui per catturare eventuali errori di caricamento GLB
+                currentMapInstance = null; 
+
+                // 2. Spawn con AWAIT (Fondamentale!)
+                // Salviamo l'istanza e aspettiamo che Unity confermi la creazione
                 currentMapInstance = await XRi.spawn("preview_map", mapData.glb, 0.5);
-                currentMapInstance.setGrabbable(false);
-                await currentMapInstance.move({ x: 0, y: 1, z: 0.5 });
-                
-                document.getElementById('map-name').innerText = mapData.name;
+
+                if (currentMapInstance) {
+                    // 3. Piccola pausa di sicurezza (50ms) per permettere al bridge di registrarsi
+                    await new Promise(resolve => setTimeout(resolve, 50));
+
+                    // 4. Esegui i comandi uno alla volta con await
+                    await currentMapInstance.setGrabbable(false);
+                    await currentMapInstance.move({ x: 0, y: 1, z: 0.5 });
+                    
+                    document.getElementById('map-name').innerText = mapData.name;
+                } else {
+                    showDebug("AR ERROR", "Istanza non creata: l'ID 'preview_map' potrebbe essere duplicato o il GLB non valido.");
+                }
             }
         } catch (e) {
-            showDebug("AR SPAWN ERROR", e.message);
+            showDebug("SPAWN EXCEPTION", e.message);
         }
     }
 
@@ -172,14 +185,15 @@
         requestAnimationFrame(animate);
     }
 
-    // FIX onload: rimosso l'errore del return function
     window.onload = async function() {
-        if (window.XRi) {
-            await updateMapAR();
-            animate();
-        } else {
-            showDebug("SYSTEM", "XRi.js non trovato al caricamento.");
-        }
+        setTimeout(async () => {
+            if (window.XRi) {
+                await updateMapAR();
+                animate();
+            } else {
+                showDebug("SYSTEM", "XRi non trovato. Riprovo tra 1 secondo...");
+            }
+        }, 1000); 
     };
     </script>
 </body>
