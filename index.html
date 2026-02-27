@@ -104,16 +104,6 @@
         content.insertBefore(entry, content.firstChild);
     }
 
-    // Gestione messaggi Unity per i Log dell'interfaccia
-    function setupUnityLog() {
-        const handler = (e) => {
-            if (e.data.includes("POSITION_DATA")) return;
-            log("UNITY: " + e.data, "#00d1ff");
-        };
-        if (window.vuplex) window.vuplex.addEventListener('message', handler);
-        else window.addEventListener('vuplexready', () => window.vuplex.addEventListener('message', handler));
-    }
-
     async function updateMapAR() {
         if (!window.XRi) return;
         
@@ -140,7 +130,6 @@
         isRotating = true;
         while (true) {
             if (currentMapInstance) {
-                // Aspetta 5 secondi che finisca la rotazione prima di inviare la prossima
                 await currentMapInstance.rotate(180, 5);
             } else {
                 await new Promise(r => setTimeout(r, 500));
@@ -154,15 +143,9 @@
     }
 
     window.onload = () => {
-        setupUnityLog();
-        if (window.vuplex) {
+        if (XRi.isReady) {
             XRi.initMultiplayer();
             updateMapAR();
-        } else {
-            window.addEventListener('vuplexready', () => {
-                XRi.initMultiplayer();
-                updateMapAR();
-            });
         }
     };
 </script>
