@@ -161,6 +161,7 @@
     window.onload = () => {
         const init = () => {
             XRi.initMultiplayer();
+            XRi.noCache();
             spawnAllHeroes();
         };
         if (window.XRi && XRi.isReady) init();

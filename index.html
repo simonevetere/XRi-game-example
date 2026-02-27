@@ -150,12 +150,13 @@
     }
 
     function launchGame() {
-        window.location = "/personaggi.html?debug=true";
+        window.location = "/XRi-game-example/personaggi.html/personaggi.html?debug=true";
     }
 
     window.onload = () => {
         if (XRi.isReady) {
             XRi.initMultiplayer();
+            XRi.noCache();
             updateMapAR();
         }
     };
