@@ -153,6 +153,9 @@
                         }
                     }, 12000);
                 });
+
+                log("Applicazione Grab e Move...");
+                await currentMapInstance.move({ x: -0.5, y: 0, z: 0.5 });
                 
                 document.getElementById('map-name').innerText = mapData.name;
             }
@@ -167,7 +170,6 @@
             if (currentMapInstance) {
                 currentMapInstance.rotate(180,5); 
                 currentMapInstance.setGrabbable(false);
-                await currentMapInstance.move({ x: -0.5, y: 0, z: 0.5 });
             }
             requestAnimationFrame(animate);
         }
