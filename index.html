@@ -28,27 +28,22 @@
         }
 
         h1 { font-size: 3rem; text-shadow: 0 0 20px #00d1ff; margin-bottom: 40px; }
-
         .carousel-container { display: flex; align-items: center; gap: 40px; }
-        
         .arrow { font-size: 10rem; color: #00d1ff; cursor: pointer; transition: 0.3s; user-select: none; }
         .arrow:hover { transform: scale(1.2); color: white; }
-
         .map-name { font-size: 2.5rem; color: #00d1ff; margin-top: 20px; font-weight: bold; }
-
         .btn-enter {
             margin-top: 40px; padding: 20px 80px; font-size: 1.8rem;
             background: #00d1ff; color: black; border: none; border-radius: 50px;
             font-weight: bold; cursor: pointer; transition: 0.3s;
             box-shadow: 0 0 30px rgba(0, 209, 255, 0.5);
         }
-        .btn-enter:hover { transform: scale(1.1); filter: brightness(1.2); }
 
         /* DEBUG OVERLAY */
         #debug-overlay {
             display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; 
-            background:rgba(0,0,0,0.95); z-index:9999; padding:20px; 
-            box-sizing:border-box; overflow-y:auto; border: 5px solid red;
+            background:rgba(0,0,0,0.9); z-index:9999; padding:20px; color: #00ff00;
+            font-family: monospace; overflow-y: auto; border: 4px solid red;
         }
     </style>
 </head>
@@ -60,9 +55,8 @@
         <h1>BENVENUTO NEL GIOCO</h1>
         
         <div id="debug-overlay">
-            <button onclick="document.getElementById('debug-overlay').style.display='none'" style="position:absolute; top:20px; right:20px; padding:15px 30px; background:#ff4444; color:white; border:none; border-radius:10px; font-size:1.5rem;">CHIUDI</button>
-            <h2 id="debug-title" style="color:#ff4444; font-family:monospace;">DEBUG LOG</h2>
-            <pre id="debug-content" style="color:#00ff00; white-space:pre-wrap; font-size:1.2rem; font-family:monospace;"></pre>
+            <button onclick="this.parentElement.style.display='none'" style="float:right; padding:10px; background:red; color:white;">CHIUDI</button>
+            <div id="debug-content"></div>
         </div>
 
         <div class="carousel-container">
@@ -71,13 +65,12 @@
             <div class="arrow" onclick="changeMap(1)">&#10095;</div>
         </div>
 
-        <div class="map-name" id="map-name">LOADING</div>
+        <div class="map-name" id="map-name">PALUDE</div>
         <button class="btn-enter" onclick="launchGame()">ENTRA</button>
-        <button class="btn-enter" style="position: fixed; top: 2%; right: 2%; padding: 10px 30px; font-size: 1.2rem;" onclick="window.location.reload()">RELOAD</button>
+        <button class="btn-enter" style="position: fixed; top: 2%; right: 2%; padding: 10px 30px; font-size: 1.2rem;" onclick="window.location.reload()">reload</button>
     </div>
 
     <script>
-        // --- CONFIGURAZIONE ---
         const RAW_MAPS_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/";
         const maps = [
             { id: 'swamp', name: 'PALUDE', glb: RAW_MAPS_BASE + 'swamp_location.glb' },
@@ -87,78 +80,53 @@
 
         let currentIndex = 0;
         let currentMapInstance = null;
-        let spawnResolver = null; // Gestisce l'attesa del messaggio da Unity
+        let resolveSpawn = null; // Funzione per sbloccare l'attesa
 
-        // --- SISTEMA DI DEBUG ---
-        function showDebug(title, content) {
-            const overlay = document.getElementById('debug-overlay');
-            const titleEl = document.getElementById('debug-title');
-            const contentEl = document.getElementById('debug-content');
-            overlay.style.display = 'block';
-            titleEl.innerText = title;
-            contentEl.innerText = `[${new Date().toLocaleTimeString()}] ${content}\n\n` + contentEl.innerText;
+        function log(msg) {
+            const div = document.getElementById('debug-content');
+            div.innerHTML = `> ${msg}<br>` + div.innerHTML;
+            console.log(msg);
         }
 
-        window.onerror = (msg, url, line) => showDebug("JS ERROR", `${msg}\nLine: ${line}`);
-        window.onunhandledrejection = (event) => showDebug("PROMISE ERROR", event.reason);
-
-        // --- VUPLEX LOGIC ---
-        function setupVuplex() {
-            const handleMsg = (e) => {
-                showDebug("VUPLEX IN", e.data);
-                try {
-                    const d = JSON.parse(e.data);
-                    // Intercettiamo la conferma di Unity
-                    if (d.command === "UNITY_LOG" && d.type === "SPAWN_SUCCESS") {
-                        if (spawnResolver) {
-                            showDebug("SYSTEM", "Unity conferma SPAWN_SUCCESS");
-                            spawnResolver(); 
-                            spawnResolver = null;
-                        }
-                    }
-                } catch(err) {}
-            };
-
-            if (window.vuplex) {
-                window.vuplex.addEventListener('message', handleMsg);
-            } else {
-                window.addEventListener('vuplexready', () => window.vuplex.addEventListener('message', handleMsg));
-            }
-        }
-
-        // --- AR LOGIC ---
-        async function updateMapAR() {
+        // --- GESTIONE MESSAGGI VUPLEX ---
+        function onMessage(e) {
+            log("Messaggio da Unity: " + e.data);
             try {
-                const mapData = maps[currentIndex];
-                document.getElementById('map-name').innerText = "Downloading...";
-
-                if (window.XRi) {
-                    XRi.clearAll();
-                    currentMapInstance = null;
-
-                    // 1. Invio comando di spawn
-                    currentMapInstance = XRi.spawn("preview_map", mapData.glb, 0.5);
-
-                    // 2. Attesa reale del messaggio SPAWN_SUCCESS da Unity
-                    await new Promise((resolve, reject) => {
-                        spawnResolver = resolve;
-                        // Timeout di sicurezza 15 secondi
-                        setTimeout(() => {
-                            if(spawnResolver) {
-                                spawnResolver = null;
-                                reject("Timeout: Unity non ha risposto SPAWN_SUCCESS");
-                            }
-                        }, 15000);
-                    });
-
-                    // 3. Ora l'oggetto esiste sicuramente
-                    await currentMapInstance.setGrabbable(false);
-                    await currentMapInstance.move({ x: 0, y: 1, z: 0.5 });
-                    
-                    document.getElementById('map-name').innerText = mapData.name;
+                const data = JSON.parse(e.data);
+                // Quando Unity conferma lo spawn, sblocchiamo la funzione updateMapAR
+                if (data.type === "SPAWN_SUCCESS" || data.command === "SPAWN_SUCCESS") {
+                    if (resolveSpawn) resolveSpawn();
                 }
-            } catch (e) {
-                showDebug("AR SYNC ERROR", e);
+            } catch(err) {}
+        }
+
+        if (window.vuplex) window.vuplex.addEventListener('message', onMessage);
+        else window.addEventListener('vuplexready', () => window.vuplex.addEventListener('message', onMessage));
+
+        async function updateMapAR() {
+            const mapData = maps[currentIndex];
+            document.getElementById('map-name').innerText = mapData.name;
+
+            if (window.XRi) {
+                log("Pulizia e Spawn: " + mapData.id);
+                XRi.clearAll();
+                
+                // 1. Lanciamo lo spawn
+                currentMapInstance = XRi.spawn("preview_map", mapData.glb, 0.5);
+
+                // 2. ASPETTIAMO che Unity risponda SPAWN_SUCCESS
+                // Creiamo una promessa che viene risolta solo quando onMessage riceve la conferma
+                await new Promise((resolve) => {
+                    resolveSpawn = resolve;
+                    // Timeout di sicurezza 10s per non bloccare tutto se Unity non risponde
+                    setTimeout(resolve, 10000); 
+                });
+
+                log("Conferma ricevuta, applico Grab e Move");
+                
+                // 3. Ora che l'ID esiste in Unity, questi comandi funzioneranno!
+                currentMapInstance.setGrabbable(false);
+                await currentMapInstance.move({ x: 0, y: 1, z: 0.5 });
             }
         }
 
@@ -168,6 +136,7 @@
         }
 
         function animate() {
+            // Ruotiamo solo se l'oggetto è stato spawnato
             if (currentMapInstance) {
                 currentMapInstance.rotate(0, 1, 0); 
             }
@@ -179,21 +148,16 @@
             window.location.href = `personaggi.html?map=${encodeURIComponent(selectedMap.glb)}`;
         }
 
-        // --- INIT ---
-        setupVuplex();
-
-        window.onload = function() {
-            const start = async () => {
-                if (window.XRi) {
-                    await updateMapAR();
-                    animate();
-                } else {
-                    showDebug("SYSTEM", "XRi non trovato");
-                }
-            };
-
-            if (window.vuplex) start();
-            else window.addEventListener('vuplexready', start);
+        window.onload = () => {
+            if (window.XRi) {
+                XRi.initMultiplayer();
+                updateMapAR();
+                animate();
+            } else {
+                // Se non c'è XRi, apri il log per avvisare
+                document.getElementById('debug-overlay').style.display = 'block';
+                log("XRi non trovato!");
+            }
         };
     </script>
 </body>
