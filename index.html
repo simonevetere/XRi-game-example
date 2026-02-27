@@ -81,7 +81,6 @@
             
             XRi.internalLog("Pagina Caricata. Sistema in pausa per 10 secondi...");
 
-            // Avviamo il controllo dopo 10 secondi
             setTimeout(() => {
                 if (XRi.isReady) {
                     XRi.internalLog("Vuplex già presente, avvio updateMapAR...");
@@ -93,8 +92,27 @@
                         updateMapAR();
                     });
                 }
-            }, 10000); // 10000ms = 10 secondi
+            }, 10000); 
         }
+        
+        // --- ERROR HANDLING ---
+        function showError(title, msg) {
+            const debugContent = document.getElementById('debug-content');
+            if (debugContent) {
+                const entry = document.createElement('div');
+                entry.style.color = color;
+                entry.style.borderBottom = "1px solid #333";
+                entry.style.padding = "8px";
+                entry.style.fontSize = "1.2rem";
+                entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${msg}`;
+                debugContent.insertBefore(entry, debugContent.firstChild);
+                
+                // Mostra l'overlay se arriva un messaggio importante
+                const overlay = document.getElementById('debug-overlay');
+                if (overlay) overlay.style.display = 'block';
+            }
+        }
+        window.onerror = (m, s, l) => showError("JS RUNTIME ERROR", `${m}\nLine: ${l}`);
 
         window.addEventListener('DOMContentLoaded', init);
     </script>
