@@ -83,104 +83,90 @@
     </div>
 
     <script>
-        const RAW_MAPS_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/";
-        const maps = [
-            { id: 'swamp', name: 'PALUDE', glb: RAW_MAPS_BASE + 'swamp_location.glb' },
-            { id: 'sand', name: 'DESERTO', glb: RAW_MAPS_BASE + 'sands_location.glb' },
-            { id: 'crypt', name: 'CRIPTA', glb: RAW_MAPS_BASE + 'crypt_location.glb' }
-        ];
+    const RAW_MAPS_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/";
+    const maps = [
+        { id: 'swamp', name: 'PALUDE', glb: RAW_MAPS_BASE + 'swamp_location.glb' },
+        { id: 'sand', name: 'DESERTO', glb: RAW_MAPS_BASE + 'sands_location.glb' },
+        { id: 'crypt', name: 'CRIPTA', glb: RAW_MAPS_BASE + 'crypt_location.glb' }
+    ];
 
-        let currentIndex = 0;
-        let currentMapInstance = null;
-        let resolveSpawn = null;
+    let currentIndex = 0;
+    let currentMapInstance = null;
+    let isRotating = false;
 
-        // --- FUNZIONE DI LOG GIGANTE ---
-        function log(msg, color = "#00ff00") {
-            const overlay = document.getElementById('debug-overlay');
-            const content = document.getElementById('debug-content');
-            overlay.style.display = 'block';
-            
-            const entry = document.createElement('div');
-            entry.style.color = color;
-            entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${msg}`;
-            content.insertBefore(entry, content.firstChild);
-        }
+    function log(msg, color = "#00ff00") {
+        const overlay = document.getElementById('debug-overlay');
+        const content = document.getElementById('debug-content');
+        overlay.style.display = 'block';
+        const entry = document.createElement('div');
+        entry.style.color = color;
+        entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${msg}`;
+        content.insertBefore(entry, content.firstChild);
+    }
 
-        // --- VUPLEX BRIDGE ---
-        function onMessage(e) {
-            // Escludiamo i log di posizione per non intasare lo schermo
+    // Gestione messaggi Unity per i Log dell'interfaccia
+    function setupUnityLog() {
+        const handler = (e) => {
             if (e.data.includes("POSITION_DATA")) return;
-
-            log("RICEVUTO: " + e.data, "#00d1ff");
-
-            try {
-                const data = JSON.parse(e.data);
-                if (data.type === "SPAWN_SUCCESS" || data.command === "SPAWN_SUCCESS") {
-                    log("SUCCESS: Unity ha confermato lo spawn!", "#ffff00");
-                    if (resolveSpawn) {
-                        resolveSpawn();
-                        resolveSpawn = null;
-                    }
-                }
-            } catch(err) {
-                log("Errore JSON: " + err.message, "#ff4444");
-            }
-        }
-
-        if (window.vuplex) window.vuplex.addEventListener('message', onMessage);
-        else window.addEventListener('vuplexready', () => window.vuplex.addEventListener('message', onMessage));
-
-        // --- AR LOGIC ---
-        async function updateMapAR() {
-            const mapData = maps[currentIndex];
-            document.getElementById('map-name').innerText = "Attesa Unity...";
-
-            if (window.XRi) {
-                XRi.clearAll();
-                
-                currentMapInstance = await XRi.spawn("preview_map", mapData.glb, 0.5);
-
-                await currentMapInstance.move({ x: -0.5, y: 0, z: 0.5 });
-
-                currentMapInstance.setGrabbable(false);
-                
-                document.getElementById('map-name').innerText = mapData.name;
-            }
-        }
-
-        function changeMap(dir) {
-            currentIndex = (currentIndex + dir + maps.length) % maps.length;
-            updateMapAR();
-        }
-
-        let setgrabbable_ = false; 
-
-        async function animate() {
-            if (currentMapInstance) {
-                await currentMapInstance.rotate(180,5);
-            }
-            requestAnimationFrame(animate);
-        }
-
-        function launchGame() {
-            const selectedMap = maps[currentIndex];
-            window.location.href = `personaggi.html?map=${encodeURIComponent(selectedMap.glb)}`;
-        }
-
-        // --- START ---
-        window.onload = () => {
-            const start = async () => {
-                if (window.XRi) {
-                    XRi.initMultiplayer();
-                    await updateMapAR();
-                    await animate();
-                } else {
-                    log("ERRORE: XRi.js non trovato!", "#ff4444");
-                }
-            };
-
-            if (window.vuplex) start();
+            log("UNITY: " + e.data, "#00d1ff");
         };
-    </script>
+        if (window.vuplex) window.vuplex.addEventListener('message', handler);
+        else window.addEventListener('vuplexready', () => window.vuplex.addEventListener('message', handler));
+    }
+
+    async function updateMapAR() {
+        if (!window.XRi) return;
+        
+        const mapData = maps[currentIndex];
+        document.getElementById('map-name').innerText = "Caricamento...";
+        
+        log(`Richiesta Spawn: ${mapData.id}`);
+        XRi.clearAll();
+
+        // QUESTO ORA ASPETTA DAVVERO
+        currentMapInstance = await XRi.spawn(mapData.id, mapData.glb, 0.5);
+        
+        log(`Spawn completato per ${mapData.id}`, "#ffff00");
+
+        // Azioni post-spawn
+        await currentMapInstance.move({ x: -0.5, y: 0, z: 0.5 });
+        currentMapInstance.setGrabbable(false);
+        
+        document.getElementById('map-name').innerText = mapData.name;
+
+        // Avvia la rotazione se non è già attiva
+        if (!isRotating) startRotationLoop();
+    }
+
+    async function startRotationLoop() {
+        isRotating = true;
+        while (true) {
+            if (currentMapInstance) {
+                // Aspetta 5 secondi che finisca la rotazione prima di inviare la prossima
+                await currentMapInstance.rotate(180, 5);
+            } else {
+                await new Promise(r => setTimeout(r, 500));
+            }
+        }
+    }
+
+    function changeMap(dir) {
+        currentIndex = (currentIndex + dir + maps.length) % maps.length;
+        updateMapAR();
+    }
+
+    window.onload = () => {
+        setupUnityLog();
+        if (window.vuplex) {
+            XRi.initMultiplayer();
+            updateMapAR();
+        } else {
+            window.addEventListener('vuplexready', () => {
+                XRi.initMultiplayer();
+                updateMapAR();
+            });
+        }
+    };
+</script>
 </body>
 </html>
