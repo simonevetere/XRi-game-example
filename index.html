@@ -123,18 +123,16 @@
         log(`Richiesta Spawn: ${mapData.id}`);
         XRi.clearAll();
 
-        // QUESTO ORA ASPETTA DAVVERO
         currentMapInstance = await XRi.spawn(mapData.id, mapData.glb, 0.5);
-        
-        log(`Spawn completato per ${mapData.id}`, "#ffff00");
 
-        // Azioni post-spawn
-        await currentMapInstance.move({ x: -0.5, y: 0, z: 0.5 });
+        await currentMapInstance.setPosition({ x: -0.5, y: 1, z: 0.5 }, 0);
+        
+        await currentMapInstance.resetRotation(0);
+        
         currentMapInstance.setGrabbable(false);
         
         document.getElementById('map-name').innerText = mapData.name;
 
-        // Avvia la rotazione se non è già attiva
         if (!isRotating) startRotationLoop();
     }
 
