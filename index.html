@@ -28,30 +28,35 @@
         }
 
         h1 { font-size: 3rem; text-shadow: 0 0 20px #00d1ff; margin-bottom: 40px; }
-
-        /* CAROSELLO */
         .carousel-container { display: flex; align-items: center; gap: 40px; }
-        
-        .map-preview {
-            width: 600px; height: 400px;
-            border: 4px solid #00d1ff; border-radius: 30px;
-            overflow: hidden; background: rgba(0,0,0,0.8);
-            box-shadow: 0 0 50px rgba(0, 209, 255, 0.4);
-        }
-        .map-preview img { width: 100%; height: 100%; object-fit: cover; }
-
-        .arrow { font-size: 10rem; color: #00d1ff; cursor: pointer; transition: 0.3s; }
+        .arrow { font-size: 10rem; color: #00d1ff; cursor: pointer; transition: 0.3s; user-select: none; }
         .arrow:hover { transform: scale(1.2); color: white; }
-
         .map-name { font-size: 2.5rem; color: #00d1ff; margin-top: 20px; font-weight: bold; }
-
+        
         .btn-enter {
             margin-top: 40px; padding: 20px 80px; font-size: 1.8rem;
             background: #00d1ff; color: black; border: none; border-radius: 50px;
             font-weight: bold; cursor: pointer; transition: 0.3s;
             box-shadow: 0 0 30px rgba(0, 209, 255, 0.5);
         }
-        .btn-enter:hover { transform: scale(1.1); filter: brightness(1.2); }
+
+        /* DEBUG OVERLAY - OTTIMIZZATO PER VISORE */
+        #debug-overlay {
+            display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; 
+            background:rgba(0,0,0,0.95); z-index:9999; padding:40px; 
+            color: #00ff00; font-family: monospace; overflow-y: auto; 
+            border: 10px solid red; font-size: 2rem; line-height: 1.4;
+        }
+
+        .debug-close-btn {
+            position: fixed; top: 20px; right: 20px; padding: 20px 40px;
+            background: #ff4444; color: white; font-size: 2rem;
+            border: none; border-radius: 15px; cursor: pointer; z-index: 10000;
+        }
+
+        #debug-content div {
+            border-bottom: 1px solid #444; margin-bottom: 15px; padding-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -60,49 +65,97 @@
 
     <div id="ui-layer">
         <h1>BENVENUTO NEL GIOCO</h1>
-        <div id="debug-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.95); z-index:9999; padding:20px; box-sizing:border-box; overflow-y:auto; border: 5px solid red;">
-            <button onclick="document.getElementById('debug-overlay').style.display='none'" style="position:absolute; top:20px; right:20px; padding:15px 30px; background:#ff4444; color:white; border:none; border-radius:10px; font-size:1.5rem;">CHIUDI</button>
-            <h2 id="debug-title" style="color:#ff4444; font-family:monospace;">DEBUG LOG</h2>
-            <pre id="debug-content" style="color:#00ff00; white-space:pre-wrap; font-size:1.2rem; font-family:monospace;"></pre>
+        
+        <div id="debug-overlay">
+            <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
+            <div id="debug-content" style="margin-top: 100px;"></div>
         </div>
+
         <div class="carousel-container">
             <div class="arrow" onclick="changeMap(-1)">&#10094;</div>
             <div class="arrow"></div>
             <div class="arrow" onclick="changeMap(1)">&#10095;</div>
         </div>
 
-        <div class="map-name" id="map-name">LOADING</div>
+        <div class="map-name" id="map-name">CARICAMENTO...</div>
         <button class="btn-enter" onclick="launchGame()">ENTRA</button>
-        <button class="btn-enter" style="position: fixed; top: 2%; right: 2%; padding: 10px 30px; font-size: 1.2rem;" onclick="window.location.reload()">reload</button>
+        <button class="btn-enter" style="position: fixed; top: 2%; right: 2%; padding: 10px 30px; font-size: 1.2rem;" onclick="window.location.reload()">RELOAD</button>
     </div>
 
     <script>
-        // URL Base per i file Raw su GitHub
         const RAW_MAPS_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/";
-
         const maps = [
-            { id: 'swamp', name: 'PALUDE', img: 'assets/img/swamp_map.png', glb: RAW_MAPS_BASE + 'swamp_location.glb' },
-            { id: 'sand', name: 'DESERTO', img: 'assets/img/sand_map.png', glb: RAW_MAPS_BASE + 'sands_location.glb' },
-            { id: 'crypt', name: 'CRIPTA', img: 'assets/img/crypt_map.png', glb: RAW_MAPS_BASE + 'crypt_location.glb' }
+            { id: 'swamp', name: 'PALUDE', glb: RAW_MAPS_BASE + 'swamp_location.glb' },
+            { id: 'sand', name: 'DESERTO', glb: RAW_MAPS_BASE + 'sands_location.glb' },
+            { id: 'crypt', name: 'CRIPTA', glb: RAW_MAPS_BASE + 'crypt_location.glb' }
         ];
 
         let currentIndex = 0;
         let currentMapInstance = null;
-        let rotationAngle = 0;
+        let resolveSpawn = null;
 
+        // --- FUNZIONE DI LOG GIGANTE ---
+        function log(msg, color = "#00ff00") {
+            const overlay = document.getElementById('debug-overlay');
+            const content = document.getElementById('debug-content');
+            overlay.style.display = 'block';
+            
+            const entry = document.createElement('div');
+            entry.style.color = color;
+            entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${msg}`;
+            content.insertBefore(entry, content.firstChild);
+        }
+
+        // --- VUPLEX BRIDGE ---
+        function onMessage(e) {
+            // Escludiamo i log di posizione per non intasare lo schermo
+            if (e.data.includes("POSITION_DATA")) return;
+
+            log("RICEVUTO: " + e.data, "#00d1ff");
+
+            try {
+                const data = JSON.parse(e.data);
+                if (data.type === "SPAWN_SUCCESS" || data.command === "SPAWN_SUCCESS") {
+                    log("SUCCESS: Unity ha confermato lo spawn!", "#ffff00");
+                    if (resolveSpawn) {
+                        resolveSpawn();
+                        resolveSpawn = null;
+                    }
+                }
+            } catch(err) {
+                log("Errore JSON: " + err.message, "#ff4444");
+            }
+        }
+
+        if (window.vuplex) window.vuplex.addEventListener('message', onMessage);
+        else window.addEventListener('vuplexready', () => window.vuplex.addEventListener('message', onMessage));
+
+        // --- AR LOGIC ---
         async function updateMapAR() {
             const mapData = maps[currentIndex];
-            
-            document.getElementById('map-name').innerText = "Downloading map";
+            document.getElementById('map-name').innerText = "Attesa Unity...";
 
             if (window.XRi) {
+                log("Comando Spawn inviato per: " + mapData.id);
                 XRi.clearAll();
                 
+                // 1. Spawn
                 currentMapInstance = XRi.spawn("preview_map", mapData.glb, 0.5);
-                
-                currentMapInstance.setGrabbable(false);
 
-                currentMapInstance.move({ x: 1, y: 1, z: 0.5 });
+                // 2. Attesa Reale del messaggio da Unity
+                await new Promise((resolve) => {
+                    resolveSpawn = resolve;
+                    // Timeout di sicurezza 12 secondi
+                    setTimeout(() => {
+                        if(resolveSpawn) {
+                            log("TIMEOUT: Unity non ha risposto SPAWN_SUCCESS", "#ff4444");
+                            resolve();
+                        }
+                    }, 12000);
+                });
+
+                log("Applicazione Grab e Move...");
+                await currentMapInstance.move({ x: -0.5, y: 0, z: 0.5 });
                 
                 document.getElementById('map-name').innerText = mapData.name;
             }
@@ -115,23 +168,31 @@
 
         function animate() {
             if (currentMapInstance) {
-                currentMapInstance.rotate(180,3);
+                currentMapInstance.rotate(180,5); 
+                currentMapInstance.setGrabbable(false);
             }
             requestAnimationFrame(animate);
         }
 
         function launchGame() {
             const selectedMap = maps[currentIndex];
-            // Passiamo l'URL completo del GLB alla pagina successiva
             window.location.href = `personaggi.html?map=${encodeURIComponent(selectedMap.glb)}`;
         }
 
-        window.onload = () => async function() {
-            if (window.XRi) {
-                XRi.initMultiplayer();
-                updateMapAR();
-                animate();
-            }
+        // --- START ---
+        window.onload = () => {
+            const start = async () => {
+                if (window.XRi) {
+                    XRi.initMultiplayer();
+                    await updateMapAR();
+                    animate();
+                } else {
+                    log("ERRORE: XRi.js non trovato!", "#ff4444");
+                }
+            };
+
+            if (window.vuplex) start();
+            else window.addEventListener('vuplexready', start);
         };
     </script>
 </body>
