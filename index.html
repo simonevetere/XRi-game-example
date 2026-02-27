@@ -6,63 +6,105 @@
     <title>XRi - Selezione Mondo</title>
     <script src="https://xri.onl/XRi.js"></script>
     <style>
-        body { margin: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; }
-        #ui-layer { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        .carousel { display: flex; align-items: center; gap: 50px; }
-        .arrow { font-size: 8rem; color: #00d1ff; cursor: pointer; user-select: none; }
-        .map-name { font-size: 3rem; font-weight: bold; text-shadow: 0 0 15px #00d1ff; }
-        .btn-enter { margin-top: 30px; padding: 20px 60px; font-size: 2rem; background: #00d1ff; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; }
-        
-        /* OVERLAY DEBUG GIGANTE */
-        #debug-overlay { 
-            display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
-            background:rgba(0,0,0,0.8); z-index:9999; padding:20px; box-sizing: border-box;
-            border: 5px solid #ff4444; overflow-y: auto; font-family: monospace; font-size: 1.5rem;
+        * { box-sizing: border-box; }
+        html, body { 
+            margin: 0; padding: 0; width: 100vw; height: 100vh; 
+            overflow: hidden; background-color: #000;
+            font-family: 'Segoe UI', sans-serif; color: white;
         }
-        .close-debug { position: absolute; top: 10px; right: 10px; padding: 10px 20px; background: red; color: white; border: none; }
+
+        #fantasy-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('assets/img/background.png');
+            background-size: cover; background-position: center;
+            filter: brightness(0.3); z-index: 1;
+        }
+
+        #ui-layer {
+            position: relative; z-index: 10;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 0%, rgba(0,0,0,0.4) 100%);
+        }
+
+        h1 { font-size: 3rem; text-shadow: 0 0 20px #00d1ff; margin-bottom: 40px; }
+
+        /* CAROSELLO */
+        .carousel-container { display: flex; align-items: center; gap: 40px; }
+        
+        .map-preview {
+            width: 600px; height: 400px;
+            border: 4px solid #00d1ff; border-radius: 30px;
+            overflow: hidden; background: rgba(0,0,0,0.8);
+            box-shadow: 0 0 50px rgba(0, 209, 255, 0.4);
+        }
+        .map-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+        .arrow { font-size: 10rem; color: #00d1ff; cursor: pointer; transition: 0.3s; }
+        .arrow:hover { transform: scale(1.2); color: white; }
+
+        .map-name { font-size: 2.5rem; color: #00d1ff; margin-top: 20px; font-weight: bold; }
+
+        .btn-enter {
+            margin-top: 40px; padding: 20px 80px; font-size: 1.8rem;
+            background: #00d1ff; color: black; border: none; border-radius: 50px;
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 0 30px rgba(0, 209, 255, 0.5);
+        }
+        .btn-enter:hover { transform: scale(1.1); filter: brightness(1.2); }
     </style>
 </head>
 <body>
 
-    <div id="debug-overlay">
-        <button class="close-debug" onclick="this.parentElement.style.display='none'">CHIUDI DEBUG</button>
-        <div id="debug-content" style="margin-top: 60px;"></div>
-    </div>
+    <div id="fantasy-bg"></div>
 
     <div id="ui-layer">
-        <h1>SCEGLI IL TUO MONDO</h1>
-        
-        <div class="carousel">
+        <h1>BENVENUTO NEL GIOCO</h1>
+        <div id="debug-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.95); z-index:9999; padding:20px; box-sizing:border-box; overflow-y:auto; border: 5px solid red;">
+            <button onclick="document.getElementById('debug-overlay').style.display='none'" style="position:absolute; top:20px; right:20px; padding:15px 30px; background:#ff4444; color:white; border:none; border-radius:10px; font-size:1.5rem;">CHIUDI</button>
+            <h2 id="debug-title" style="color:#ff4444; font-family:monospace;">DEBUG LOG</h2>
+            <pre id="debug-content" style="color:#00ff00; white-space:pre-wrap; font-size:1.2rem; font-family:monospace;"></pre>
+        </div>
+        <div class="carousel-container">
             <div class="arrow" onclick="changeMap(-1)">&#10094;</div>
-            <div class="map-name" id="map-label">PALUDE</div>
+            <div class="arrow"></div>
             <div class="arrow" onclick="changeMap(1)">&#10095;</div>
         </div>
 
-        <button class="btn-enter" onclick="launchGame()">ENTRA NEL MONDO</button>
-        <button style="margin-top:20px; background:none; border:1px solid #444; color:white; padding:10px; width:10%;" onclick="location.reload()">RELOAD SYSTEM</button>
+        <div class="map-name" id="map-name">LOADING</div>
+        <button class="btn-enter" onclick="launchGame()">ENTRA</button>
+        <button class="btn-enter" style="position: fixed; top: 2%; right: 2%; padding: 10px 30px; font-size: 1.2rem;" onclick="window.location.reload()">reload</button>
     </div>
 
     <script>
+        // URL Base per i file Raw su GitHub
+        const RAW_MAPS_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/";
+
         const maps = [
-            { id: 'swamp', name: 'PALUDE', glb: 'https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/swamp_location.glb' },
-            { id: 'sand', name: 'DESERTO', glb: 'https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/sands_location.glb' },
-            { id: 'crypt', name: 'CRIPTA', glb: 'https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/crypt_location.glb' }
+            { id: 'swamp', name: 'PALUDE', img: 'assets/img/swamp_map.png', glb: RAW_MAPS_BASE + 'swamp_location.glb' },
+            { id: 'sand', name: 'DESERTO', img: 'assets/img/sand_map.png', glb: RAW_MAPS_BASE + 'sands_location.glb' },
+            { id: 'crypt', name: 'CRIPTA', img: 'assets/img/crypt_map.png', glb: RAW_MAPS_BASE + 'crypt_location.glb' }
         ];
 
         let currentIndex = 0;
-        let currentMap = null;
+        let currentMapInstance = null;
+        let rotationAngle = 0;
 
         async function updateMapAR() {
-            const data = maps[currentIndex];
-            document.getElementById('map-label').innerText = "CARICAMENTO...";
+            const mapData = maps[currentIndex];
+            
+            document.getElementById('map-name').innerText = "Downloading map";
 
             if (window.XRi) {
                 XRi.clearAll();
                 
-                currentMap = await XRi.spawn("map", data.glb, 0.4, {x:-0.5, y:0, z:0.5}, {x:0, y:180, z:0});
+                currentMapInstance = XRi.spawn("preview_map", mapData.glb, 0.5);
                 
-                document.getElementById('map-label').innerText = data.name;
-                currentMap.setGrabbable(false);
+                currentMapInstance.setGrabbable(false);
+
+                currentMapInstance.move({ x: 1, y: 1, z: 0.5 });
+                
+                document.getElementById('map-name').innerText = mapData.name;
             }
         }
 
@@ -71,50 +113,26 @@
             updateMapAR();
         }
 
-        function launchGame() {
-            window.location.href = `personaggi.html?map=${encodeURIComponent(maps[currentIndex].glb)}`;
-        }
-
-        function init() {
-            const debug = document.getElementById('debug-overlay');
-            if(debug) debug.style.display = 'block';
-            
-            XRi.internalLog("Pagina Caricata. Sistema in pausa per 10 secondi...");
-
-            setTimeout(() => {
-                if (XRi.isReady) {
-                    XRi.internalLog("Vuplex già presente, avvio updateMapAR...");
-                    updateMapAR();
-                } else {
-                    XRi.internalLog("In attesa di vuplexready...");
-                    window.addEventListener('vuplexready', () => {
-                        XRi.internalLog("Evento vuplexready ricevuto!");
-                        updateMapAR();
-                    });
-                }
-            }, 10000); 
-        }
-        
-        // --- ERROR HANDLING ---
-        function showError(title, msg) {
-            const debugContent = document.getElementById('debug-content');
-            if (debugContent) {
-                const entry = document.createElement('div');
-                entry.style.color = color;
-                entry.style.borderBottom = "1px solid #333";
-                entry.style.padding = "8px";
-                entry.style.fontSize = "1.2rem";
-                entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${msg}`;
-                debugContent.insertBefore(entry, debugContent.firstChild);
-                
-                // Mostra l'overlay se arriva un messaggio importante
-                const overlay = document.getElementById('debug-overlay');
-                if (overlay) overlay.style.display = 'block';
+        function animate() {
+            if (currentMapInstance) {
+                currentMapInstance.rotate(180,3);
             }
+            requestAnimationFrame(animate);
         }
-        window.onerror = (m, s, l) => showError("JS RUNTIME ERROR", `${m}\nLine: ${l}`);
 
-        window.addEventListener('DOMContentLoaded', init);
+        function launchGame() {
+            const selectedMap = maps[currentIndex];
+            // Passiamo l'URL completo del GLB alla pagina successiva
+            window.location.href = `personaggi.html?map=${encodeURIComponent(selectedMap.glb)}`;
+        }
+
+        window.onload = () => async function() {
+            if (window.XRi) {
+                XRi.initMultiplayer();
+                updateMapAR();
+                animate();
+            }
+        };
     </script>
 </body>
 </html>
