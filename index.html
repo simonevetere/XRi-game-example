@@ -139,20 +139,7 @@
                 log("Comando Spawn inviato per: " + mapData.id);
                 XRi.clearAll();
                 
-                // 1. Spawn
-                currentMapInstance = XRi.spawn("preview_map", mapData.glb, 0.5);
-
-                // 2. Attesa Reale del messaggio da Unity
-                await new Promise((resolve) => {
-                    resolveSpawn = resolve;
-                    // Timeout di sicurezza 12 secondi
-                    setTimeout(() => {
-                        if(resolveSpawn) {
-                            log("TIMEOUT: Unity non ha risposto SPAWN_SUCCESS", "#ff4444");
-                            resolve();
-                        }
-                    }, 12000);
-                });
+                currentMapInstance = await XRi.spawn("preview_map", mapData.glb, 0.5);
 
                 log("Applicazione Grab e Move...");
                 await currentMapInstance.move({ x: -0.5, y: 0, z: 0.5 });
@@ -166,10 +153,16 @@
             updateMapAR();
         }
 
+        let setgrabbable_ = false; 
+
         function animate() {
             if (currentMapInstance) {
                 currentMapInstance.rotate(180,5); 
-                currentMapInstance.setGrabbable(false);
+                if(!setgrabbable_){
+                    currentMapInstance.setGrabbable(false);
+                    setgrabbable_ = true;
+                }
+
             }
             requestAnimationFrame(animate);
         }
