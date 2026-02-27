@@ -74,6 +74,7 @@
 
     let local_url = new URLSearchParams(window.location.search);
     let local_debug = local_url.get('debug') || false;
+    log('debug:'+local_debug);
 
     function log(msg, color = "#00ff00") {
         if(!local_debug) return;
