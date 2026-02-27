@@ -83,21 +83,32 @@
         let resolveSpawn = null; // Funzione per sbloccare l'attesa
 
         function log(msg) {
+            const overlay = document.getElementById('debug-overlay');
             const div = document.getElementById('debug-content');
-            div.innerHTML = `> ${msg}<br>` + div.innerHTML;
-            console.log(msg);
+            
+            // Forza l'apertura dell'overlay appena c'è un log
+            overlay.style.display = 'block'; 
+            
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] > ${msg}<br>` + div.innerHTML;
         }
 
-        // --- GESTIONE MESSAGGI VUPLEX ---
         function onMessage(e) {
-            log("Messaggio da Unity: " + e.data);
+            log("RICEVUTO: " + e.data);
+            
             try {
                 const data = JSON.parse(e.data);
-                // Quando Unity conferma lo spawn, sblocchiamo la funzione updateMapAR
+                
+                // Controlliamo se il messaggio è quello che aspettiamo
                 if (data.type === "SPAWN_SUCCESS" || data.command === "SPAWN_SUCCESS") {
-                    if (resolveSpawn) resolveSpawn();
+                    log("!!! SUCCESS DETECTED !!!");
+                    if (resolveSpawn) {
+                        resolveSpawn();
+                        resolveSpawn = null;
+                    }
                 }
-            } catch(err) {}
+            } catch(err) {
+                log("Errore parsing JSON: " + err.message);
+            }
         }
 
         if (window.vuplex) window.vuplex.addEventListener('message', onMessage);
@@ -124,9 +135,8 @@
 
                 log("Conferma ricevuta, applico Grab e Move");
                 
-                // 3. Ora che l'ID esiste in Unity, questi comandi funzioneranno!
                 currentMapInstance.setGrabbable(false);
-                await currentMapInstance.move({ x: 0, y: 1, z: 0.5 });
+                await currentMapInstance.move({ x: -0.5, y: 0, z: 0.5 });
             }
         }
 
@@ -136,9 +146,8 @@
         }
 
         function animate() {
-            // Ruotiamo solo se l'oggetto è stato spawnato
             if (currentMapInstance) {
-                currentMapInstance.rotate(0, 1, 0); 
+                currentMapInstance.rotate(180,3); 
             }
             requestAnimationFrame(animate);
         }
