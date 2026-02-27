@@ -60,7 +60,11 @@
 
     <div id="ui-layer">
         <h1>BENVENUTO NEL GIOCO</h1>
-
+        <div id="debug-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.95); z-index:9999; padding:20px; box-sizing:border-box; overflow-y:auto; border: 5px solid red;">
+            <button onclick="document.getElementById('debug-overlay').style.display='none'" style="position:absolute; top:20px; right:20px; padding:15px 30px; background:#ff4444; color:white; border:none; border-radius:10px; font-size:1.5rem;">CHIUDI</button>
+            <h2 id="debug-title" style="color:#ff4444; font-family:monospace;">DEBUG LOG</h2>
+            <pre id="debug-content" style="color:#00ff00; white-space:pre-wrap; font-size:1.2rem; font-family:monospace;"></pre>
+        </div>
         <div class="carousel-container">
             <div class="arrow" onclick="changeMap(-1)">&#10094;</div>
             <div class="arrow"></div>
@@ -73,62 +77,110 @@
     </div>
 
     <script>
-        // URL Base per i file Raw su GitHub
-        const RAW_MAPS_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/";
+        // --- SISTEMA DI LOG A SCHERMO INTERO ---
+    function showDebug(title, content) {
+        const overlay = document.getElementById('debug-overlay');
+        const titleEl = document.getElementById('debug-title');
+        const contentEl = document.getElementById('debug-content');
+        
+        overlay.style.display = 'block';
+        titleEl.innerText = title;
+        // Aggiunge il nuovo messaggio in cima
+        contentEl.innerText = `[${new Date().toLocaleTimeString()}] ${content}\n\n` + contentEl.innerText;
+    }
 
-        const maps = [
-            { id: 'swamp', name: 'PALUDE', img: 'assets/img/swamp_map.png', glb: RAW_MAPS_BASE + 'swamp_location.glb' },
-            { id: 'sand', name: 'DESERTO', img: 'assets/img/sand_map.png', glb: RAW_MAPS_BASE + 'sands_location.glb' },
-            { id: 'crypt', name: 'CRIPTA', img: 'assets/img/crypt_map.png', glb: RAW_MAPS_BASE + 'crypt_location.glb' }
-        ];
+    // 1. Intercetta errori JavaScript standard (Sintassi, Reference, etc.)
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+        showDebug("JS ERROR DETECTED", `Message: ${msg}\nLine: ${lineNo}\nFile: ${url}`);
+        return false;
+    };
 
-        let currentIndex = 0;
-        let currentMapInstance = null;
-        let rotationAngle = 0;
+    // 2. Intercetta errori nelle funzioni ASYNC (Promise fallite)
+    window.onunhandledrejection = function(event) {
+        showDebug("ASYNC ERROR (Promise)", event.reason);
+    };
 
-        async function updateMapAR() {
+    // 3. VUPLEX & STATUS (La tua funzione modificata per usare showDebug)
+    function setupVuplex() {
+        const handleMsg = (e) => {
+            // Mostra ogni singolo messaggio che arriva da Unity a schermo intero
+            showDebug("VUPLEX MESSAGE", e.data);
+
+            try {
+                const d = JSON.parse(e.data);
+                if (d.command === "UNITY_LOG") {
+                    // Se vuoi un avviso speciale per il Grab
+                    if (d.type === "GRAB_START") showDebug("UNITY EVENT", `GRAB STARTED: ${d.id}`);
+                }
+            } catch(err) {
+                // Se il JSON.parse fallisce, abbiamo comunque loggato e.data sopra
+            }
+        };
+
+        if (window.vuplex) {
+            window.vuplex.addEventListener('message', handleMsg);
+        } else {
+            window.addEventListener('vuplexready', () => {
+                window.vuplex.addEventListener('message', handleMsg);
+                showDebug("SYSTEM", "Vuplex Ready!");
+            });
+        }
+    }
+
+    // Avvia il sistema Vuplex subito
+    setupVuplex();
+
+    // --- IL TUO CODICE ORIGINALE (con correzione onload) ---
+    const RAW_MAPS_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/";
+    const maps = [
+        { id: 'swamp', name: 'PALUDE', glb: RAW_MAPS_BASE + 'swamp_location.glb' },
+        { id: 'sand', name: 'DESERTO', glb: RAW_MAPS_BASE + 'sands_location.glb' },
+        { id: 'crypt', name: 'CRIPTA', glb: RAW_MAPS_BASE + 'crypt_location.glb' }
+    ];
+
+    let currentIndex = 0;
+    let currentMapInstance = null;
+
+    async function updateMapAR() {
+        try {
             const mapData = maps[currentIndex];
-            
-            document.getElementById('map-name').innerText = "Downloading map";
+            document.getElementById('map-name').innerText = "Downloading...";
 
             if (window.XRi) {
                 XRi.clearAll();
-                
-                currentMapInstance = XRi.spawn("preview_map", mapData.glb, 0.5);
-                
+                // Importante: Await qui per catturare eventuali errori di caricamento GLB
+                currentMapInstance = await XRi.spawn("preview_map", mapData.glb, 0.5);
                 currentMapInstance.setGrabbable(false);
-
-                currentMapInstance.move({ x: 1, y: 1, z: 0.5 });
+                await currentMapInstance.move({ x: 0, y: 1, z: 0.5 });
                 
                 document.getElementById('map-name').innerText = mapData.name;
             }
+        } catch (e) {
+            showDebug("AR SPAWN ERROR", e.message);
         }
+    }
 
-        function changeMap(dir) {
-            currentIndex = (currentIndex + dir + maps.length) % maps.length;
-            updateMapAR();
+    function changeMap(dir) {
+        currentIndex = (currentIndex + dir + maps.length) % maps.length;
+        updateMapAR();
+    }
+
+    function animate() {
+        if (currentMapInstance) {
+            currentMapInstance.rotate(0, 1, 0); // Rotazione lenta continua
         }
+        requestAnimationFrame(animate);
+    }
 
-        function animate() {
-            if (currentMapInstance) {
-                currentMapInstance.rotate(180,3);
-            }
-            requestAnimationFrame(animate);
+    // FIX onload: rimosso l'errore del return function
+    window.onload = async function() {
+        if (window.XRi) {
+            await updateMapAR();
+            animate();
+        } else {
+            showDebug("SYSTEM", "XRi.js non trovato al caricamento.");
         }
-
-        function launchGame() {
-            const selectedMap = maps[currentIndex];
-            // Passiamo l'URL completo del GLB alla pagina successiva
-            window.location.href = `personaggi.html?map=${encodeURIComponent(selectedMap.glb)}`;
-        }
-
-        window.onload = () => async function() {
-            if (window.XRi) {
-                XRi.initMultiplayer();
-                updateMapAR();
-                animate();
-            }
-        };
+    };
     </script>
 </body>
 </html>
