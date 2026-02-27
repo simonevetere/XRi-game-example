@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Selezione Eroe AR</title>
+    <title>XRi - Selezione Eroe</title>
     <script src="https://xri.onl/XRi.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -13,141 +13,145 @@
             font-family: 'Segoe UI', sans-serif; color: white;
         }
 
-        /* SFONDO FANTASY CON IMMAGINE */
         #fantasy-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image: url('assets/img/background.png');
             background-size: cover; background-position: center;
-            filter: brightness(0.4) blur(8px); 
-            z-index: 1;
+            filter: brightness(0.3); z-index: 1;
         }
 
-        #ui-header { 
+        #ui-layer {
             position: relative; z-index: 10;
-            text-align: center; padding: 40px; 
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 0%, rgba(0,0,0,0.4) 100%);
         }
 
-        h1 { font-size: 3rem; text-shadow: 0 0 20px #00ffcc; margin: 0; }
-
-        #confirm-box {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(10, 10, 10, 0.95); border: 3px solid #00ffcc;
-            padding: 50px; border-radius: 20px; text-align: center; z-index: 100;
-            box-shadow: 0 0 50px rgba(0, 255, 204, 0.4);
+        h1 { font-size: 3rem; text-shadow: 0 0 20px #00d1ff; margin: 0; }
+        .map-name { font-size: 2.5rem; color: #00d1ff; margin-top: 20px; font-weight: bold; min-height: 4rem; }
+        
+        .btn-confirm {
+            display: none; /* Appare solo dopo la scelta */
+            margin-top: 40px; padding: 20px 80px; font-size: 1.8rem;
+            background: #00ff44; color: black; border: none; border-radius: 50px;
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 0 30px rgba(0, 255, 68, 0.5);
         }
 
-        .btn-group { display: flex; justify-content: center; gap: 20px; margin-top: 30px; }
-        .btn { padding: 15px 40px; font-size: 1.2rem; border-radius: 10px; cursor: pointer; border: none; font-weight: bold; transition: 0.2s; }
-        .btn-yes { background: #00ffcc; color: black; }
-        .btn-no { background: #333; color: white; }
-        .btn:active { transform: scale(0.95); }
-        .hidden { display: none !important; }
+        #debug-overlay {
+            display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; 
+            background:rgba(0,0,0,0.95); z-index:9999; padding:40px; 
+            color: #00ff00; font-family: monospace; overflow-y: auto; 
+            border: 10px solid red; font-size: 2rem;
+        }
     </style>
 </head>
 <body>
 
     <div id="fantasy-bg"></div>
 
-    <div id="ui-header">
-        <h1>TOCCA IL TUO EROE</h1>
-        <button class="btn btn-yes" style="position: fixed; top: 2%; right: 2%; padding: 10px 25px; font-size: 1rem;" onclick="window.location.reload()">reload</button>
-    </div>
-
-    <div id="confirm-box" class="hidden">
-        <h2 id="char-name-display" style="color:#00ffcc; text-transform: uppercase;">---</h2>
-        <p>Vuoi iniziare l'avventura con questo eroe?</p>
-        <div class="btn-group">
-            <button class="btn btn-no" onclick="cancelChoice()">ANNULLA</button>
-            <button class="btn btn-yes" onclick="confirmChoice()">CONFERMA</button>
+    <div id="ui-layer">
+        <h1 id="title-text">TOCCA L'EROE PER SCEGLIERE</h1>
+        <div class="map-name" id="choice-text"></div>
+        <button class="btn-confirm" id="btn-confirm" onclick="confirmChoice()">CONFERMA SCELTA</button>
+        
+        <div id="debug-overlay">
+            <button onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
+            <div id="debug-content"></div>
         </div>
     </div>
 
     <script>
-        // URL Base per i personaggi dal tuo GitHub
-        const HERO_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/playable/";
-        
-        let heroes = { knight: null, troll: null, archer: null };
-        let selectedHero = null;
+    const RAW_HERO_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/playable/";
+    const heroes = [
+        { id: 'archer', name: 'ARCHER', glb: RAW_HERO_BASE + 'archer.glb', x: -0.2 },
+        { id: 'knight', name: 'KNIGHT', glb: RAW_HERO_BASE + 'knight.glb', x: 0.0 },
+        { id: 'troll', name: 'TROLL', glb: RAW_HERO_BASE + 'troll.glb', x: 0.2 }
+    ];
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const mapFile = urlParams.get('map') || 'swamp_location.glb';
+    let selectedHeroId = null;
+    let heroInstances = {};
 
-        async function initScene() {
-            if(window.XRi) {
-                XRi.initMultiplayer();
-                XRi.clearAll();
-                // La mappa arriva come URL completo dalla pagina precedente o usa il default
-                XRi.spawn("map", mapFile, 0.8);
-
-                setTimeout(async () => {
-                    // SPAWN E SALVATAGGIO ISTANZE dai percorsi GitHub
-                    heroes.knight = XRi.spawn("knight", HERO_BASE + "knight.glb", 1.2);
-                    heroes.troll = XRi.spawn("troll", HERO_BASE + "troll.glb", 1.2);
-                    heroes.archer = XRi.spawn("archer", HERO_BASE + "archer.glb", 1.2);
-
-                    // POSIZIONAMENTO
-                    await heroes.knight.move({ x: -2.0, y: 0, z: 3.5 });
-                    await heroes.troll.move({ x: 0, y: 0, z: 4.0 });
-                    await heroes.archer.move({ x: 2.0, y: 0, z: 3.5 });
-
-                    // ANIMAZIONI (Passiamo stringa vuota per default)
-                    heroes.knight.startAnimation("");
-                    heroes.troll.startAnimation("");
-                    heroes.archer.startAnimation("");
-                }, 1000);
-            }
+    // 1. Funzione di Log (integrata con XRi.js come abbiamo discusso)
+    function log(msg, color = "#00ff00") {
+        console.log(msg);
+        const content = document.getElementById('debug-content');
+        if(content) {
+            const entry = document.createElement('div');
+            entry.style.color = color;
+            entry.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            content.insertBefore(entry, content.firstChild);
         }
+    }
 
-        function handleUnityMessage(e) {
+    // 2. Spawn Simultaneo
+    async function spawnAllHeroes() {
+        log("Evocazione eroi...");
+        XRi.clearAll();
+
+        for (const hero of heroes) {
+            log(`Spawning ${hero.name}...`);
+            // Spawna a 10cm di distanza l'uno dall'altro (asse X)
+            const inst = await XRi.spawn(hero.id, hero.glb, 0.1, { x: hero.x, y: 1, z: 0.5 });
+            await inst.resetRotation(0);
+            await inst.setGrabbable(true);
+            await inst.startAnimation("");
+            heroInstances[hero.id] = inst;
+        }
+        log("Tutti gli eroi sono pronti.");
+    }
+
+    window.addEventListener('vuplexready', () => {
+        window.vuplex.addEventListener('message', (e) => {
             try {
-                const d = JSON.parse(e.data);
-                if (d.command === "UNITY_LOG" && d.type === "GRAB_START") {
-                    const id = d.id;
-                    if (heroes[id]) {
-                        selectedHero = heroes[id];
-                        selectedHero.startAnimation(""); // Trigger animazione default al tocco
-                        
-                        const names = { knight: "Guerriero", troll: "Troll", archer: "Arciere" };
-                        document.getElementById('char-name-display').innerText = names[id];
-                        document.getElementById('confirm-box').classList.remove('hidden');
-                    }
+                const data = JSON.parse(e.data);
+                // Quando l'utente tocca/afferra un oggetto, Unity manda il comando GRAB o SELECT
+                if (data.type === "GRAB_START" || data.type === "OBJECT_SELECTED") {
+                    handleSelection(data.id);
                 }
             } catch(err) {}
-        }
+        });
+    });
 
-        // Setup Vuplex
-        if (window.vuplex) {
-            window.vuplex.addEventListener('message', handleUnityMessage);
-        } else {
-            window.addEventListener('vuplexready', () => {
-                window.vuplex.addEventListener('message', handleUnityMessage);
-            });
-        }
+    async function handleSelection(heroId) {
+        if (selectedHeroId) return; // Scelta già effettuata
+        
+        selectedHeroId = heroId;
+        const heroData = heroes.find(h => h.id === heroId);
+        
+        document.getElementById('title-text').innerText = "HAI SCELTO:";
+        document.getElementById('choice-text').innerText = heroData.name;
+        document.getElementById('btn-confirm').style.display = 'block';
 
-        function cancelChoice() {
-            if (selectedHero) selectedHero.startAnimation("");
-            selectedHero = null;
-            document.getElementById('confirm-box').classList.add('hidden');
-        }
+        log(`Selezionato: ${heroData.name}`, "#ffff00");
 
-        async function confirmChoice() {
-            // Elimina gli altri eroi
-            for (let key in heroes) {
-                if (heroes[key] && heroes[key] !== selectedHero) {
-                    heroes[key].destroy();
-                }
+        // Elimina gli altri due
+        for (const hero of heroes) {
+            if (hero.id !== heroId) {
+                // Comando ipotetico per distruggere singolo oggetto o lo spostiamo lontano
+                XRi._send({ command: "DESTROY_OBJECT", id: hero.id });
             }
-            
-            selectedHero.startAnimation("");
-            document.getElementById('confirm-box').innerHTML = "<h2>AVVENTURA INIZIATA!</h2>";
-            
-            setTimeout(() => {
-                document.body.style.display = 'none';
-            }, 3000);
         }
 
-        window.onload = initScene;
-    </script>
+        // Porta quello scelto al centro e raddrizzalo
+        const chosen = heroInstances[heroId];
+        await chosen.setPosition({ x: 0, y: 1, z: 0.5 }, 0.5);
+    }
+
+    function confirmChoice() {
+        log("Scelta confermata! Caricamento mappa...");
+        // Qui puoi mandare al server multiplayer la scelta o cambiare pagina
+        window.location.href = "mappa.html?hero=" + selectedHeroId;
+    }
+
+    window.onload = () => {
+        const init = () => {
+            XRi.initMultiplayer();
+            spawnAllHeroes();
+        };
+        if (window.XRi && XRi.isReady) init();
+        else window.addEventListener('vuplexready', init);
+    };
+</script>
 </body>
 </html>
