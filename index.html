@@ -96,11 +96,11 @@
                 
                 currentMapInstance = await XRi.spawn("preview_map", mapData.glb, 1);
                 
-                await currentMapInstance.move({ x: 0, y: 1, z: 0.5 });
+                currentMapInstance.setGrabbable(false);
+
+                currentMapInstance.move({ x: 1, y: 1, z: 0.5 });
                 
                 document.getElementById('map-name').innerText = mapData.name;
-
-                currentMapInstance.setGrabbable(false);
             }
         }
 
