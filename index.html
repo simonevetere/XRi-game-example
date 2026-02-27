@@ -67,7 +67,7 @@
             <div class="arrow" onclick="changeMap(1)">&#10095;</div>
         </div>
 
-        <div class="map-name" id="map-name">PALUDE</div>
+        <div class="map-name" id="map-name">LOADING</div>
         <button class="btn-enter" onclick="launchGame()">ENTRA</button>
         <button class="btn-enter" style="position: fixed; top: 2%; right: 2%; padding: 10px 30px; font-size: 1.2rem;" onclick="window.location.reload()">reload</button>
     </div>
@@ -94,7 +94,7 @@
             if (window.XRi) {
                 XRi.clearAll();
                 
-                await currentMapInstance = XRi.spawn("preview_map", mapData.glb, 1);
+                currentMapInstance = await XRi.spawn("preview_map", mapData.glb, 1);
                 
                 await currentMapInstance.move({ x: 0, y: 1, z: 0.5 });
                 
@@ -122,7 +122,7 @@
             window.location.href = `personaggi.html?map=${encodeURIComponent(selectedMap.glb)}`;
         }
 
-        window.onload = () => {
+        window.onload = () => async () {
             if (window.XRi) {
                 XRi.initMultiplayer();
                 await updateMapAR();
