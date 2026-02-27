@@ -6,158 +6,64 @@
     <title>XRi - Selezione Mondo</title>
     <script src="https://xri.onl/XRi.js"></script>
     <style>
-        * { box-sizing: border-box; }
-        html, body { 
-            margin: 0; padding: 0; width: 100vw; height: 100vh; 
-            overflow: hidden; background-color: #000;
-            font-family: 'Segoe UI', sans-serif; color: white;
-        }
-
-        #fantasy-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url('assets/img/background.png');
-            background-size: cover; background-position: center;
-            filter: brightness(0.3); z-index: 1;
-        }
-
-        #ui-layer {
-            position: relative; z-index: 10;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            width: 100%; height: 100%;
-            background: radial-gradient(circle, transparent 0%, rgba(0,0,0,0.4) 100%);
-        }
-
-        h1 { font-size: 3rem; text-shadow: 0 0 20px #00d1ff; margin-bottom: 40px; }
-        .carousel-container { display: flex; align-items: center; gap: 40px; }
-        .arrow { font-size: 10rem; color: #00d1ff; cursor: pointer; transition: 0.3s; user-select: none; }
-        .arrow:hover { transform: scale(1.2); color: white; }
-        .map-name { font-size: 2.5rem; color: #00d1ff; margin-top: 20px; font-weight: bold; }
+        body { margin: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; }
+        #ui-layer { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .carousel { display: flex; align-items: center; gap: 50px; }
+        .arrow { font-size: 8rem; color: #00d1ff; cursor: pointer; user-select: none; }
+        .map-name { font-size: 3rem; font-weight: bold; text-shadow: 0 0 15px #00d1ff; }
+        .btn-enter { margin-top: 30px; padding: 20px 60px; font-size: 2rem; background: #00d1ff; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; }
         
-        .btn-enter {
-            margin-top: 40px; padding: 20px 80px; font-size: 1.8rem;
-            background: #00d1ff; color: black; border: none; border-radius: 50px;
-            font-weight: bold; cursor: pointer; transition: 0.3s;
-            box-shadow: 0 0 30px rgba(0, 209, 255, 0.5);
+        /* OVERLAY DEBUG GIGANTE */
+        #debug-overlay { 
+            display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+            background:rgba(0,0,0,0.8); z-index:9999; padding:20px; box-sizing: border-box;
+            border: 5px solid #ff4444; overflow-y: auto; font-family: monospace; font-size: 1.5rem;
         }
-
-        /* DEBUG OVERLAY - OTTIMIZZATO PER VISORE */
-        #debug-overlay {
-            display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; 
-            background:rgba(0,0,0,0.95); z-index:9999; padding:40px; 
-            color: #00ff00; font-family: monospace; overflow-y: auto; 
-            border: 10px solid red; font-size: 2rem; line-height: 1.4;
-        }
-
-        .debug-close-btn {
-            position: fixed; top: 20px; right: 20px; padding: 20px 40px;
-            background: #ff4444; color: white; font-size: 2rem;
-            border: none; border-radius: 15px; cursor: pointer; z-index: 10000;
-        }
-
-        #debug-content div {
-            border-bottom: 1px solid #444; margin-bottom: 15px; padding-bottom: 10px;
-        }
+        .close-debug { position: absolute; top: 10px; right: 10px; padding: 10px 20px; background: red; color: white; border: none; }
     </style>
 </head>
 <body>
 
-    <div id="fantasy-bg"></div>
+    <div id="debug-overlay">
+        <button class="close-debug" onclick="this.parentElement.style.display='none'">CHIUDI DEBUG</button>
+        <div id="debug-content" style="margin-top: 60px;"></div>
+    </div>
 
     <div id="ui-layer">
-        <h1>BENVENUTO NEL GIOCO</h1>
+        <h1>SCEGLI IL TUO MONDO</h1>
         
-        <div id="debug-overlay">
-            <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
-            <div id="debug-content" style="margin-top: 100px;"></div>
-        </div>
-
-        <div class="carousel-container">
+        <div class="carousel">
             <div class="arrow" onclick="changeMap(-1)">&#10094;</div>
-            <div class="arrow"></div>
+            <div class="map-name" id="map-label">PALUDE</div>
             <div class="arrow" onclick="changeMap(1)">&#10095;</div>
         </div>
 
-        <div class="map-name" id="map-name">CARICAMENTO...</div>
-        <button class="btn-enter" onclick="launchGame()">ENTRA</button>
-        <button class="btn-enter" style="position: fixed; top: 2%; right: 2%; padding: 10px 30px; font-size: 1.2rem;" onclick="window.location.reload()">RELOAD</button>
+        <button class="btn-enter" onclick="launchGame()">ENTRA NEL MONDO</button>
+        <button style="margin-top:20px; background:none; border:1px solid #444; color:white; padding:10px;" onclick="location.reload()">RELOAD SYSTEM</button>
     </div>
 
     <script>
-        const RAW_MAPS_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/";
         const maps = [
-            { id: 'swamp', name: 'PALUDE', glb: RAW_MAPS_BASE + 'swamp_location.glb' },
-            { id: 'sand', name: 'DESERTO', glb: RAW_MAPS_BASE + 'sands_location.glb' },
-            { id: 'crypt', name: 'CRIPTA', glb: RAW_MAPS_BASE + 'crypt_location.glb' }
+            { id: 'swamp', name: 'PALUDE', glb: 'https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/swamp_location.glb' },
+            { id: 'sand', name: 'DESERTO', glb: 'https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/sands_location.glb' },
+            { id: 'crypt', name: 'CRIPTA', glb: 'https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/crypt_location.glb' }
         ];
 
         let currentIndex = 0;
-        let currentMapInstance = null;
-        let resolveSpawn = null;
+        let currentMap = null;
 
-        // --- FUNZIONE DI LOG GIGANTE ---
-        function log(msg, color = "#00ff00") {
-            const overlay = document.getElementById('debug-overlay');
-            const content = document.getElementById('debug-content');
-            overlay.style.display = 'block';
-            
-            const entry = document.createElement('div');
-            entry.style.color = color;
-            entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${msg}`;
-            content.insertBefore(entry, content.firstChild);
-        }
-
-        // --- VUPLEX BRIDGE ---
-        function onMessage(e) {
-            // Escludiamo i log di posizione per non intasare lo schermo
-            if (e.data.includes("POSITION_DATA")) return;
-
-            log("RICEVUTO: " + e.data, "#00d1ff");
-
-            try {
-                const data = JSON.parse(e.data);
-                if (data.type === "SPAWN_SUCCESS" || data.command === "SPAWN_SUCCESS") {
-                    log("SUCCESS: Unity ha confermato lo spawn!", "#ffff00");
-                    if (resolveSpawn) {
-                        resolveSpawn();
-                        resolveSpawn = null;
-                    }
-                }
-            } catch(err) {
-                log("Errore JSON: " + err.message, "#ff4444");
-            }
-        }
-
-        if (window.vuplex) window.vuplex.addEventListener('message', onMessage);
-        else window.addEventListener('vuplexready', () => window.vuplex.addEventListener('message', onMessage));
-
-        // --- AR LOGIC ---
         async function updateMapAR() {
-            const mapData = maps[currentIndex];
-            document.getElementById('map-name').innerText = "Attesa Unity...";
+            const data = maps[currentIndex];
+            document.getElementById('map-label').innerText = "CARICAMENTO...";
 
             if (window.XRi) {
-                log("Comando Spawn inviato per: " + mapData.id);
                 XRi.clearAll();
                 
-                // 1. Spawn
-                currentMapInstance = XRi.spawn("preview_map", mapData.glb, 0.5);
-
-                // 2. Attesa Reale del messaggio da Unity
-                await new Promise((resolve) => {
-                    resolveSpawn = resolve;
-                    // Timeout di sicurezza 12 secondi
-                    setTimeout(() => {
-                        if(resolveSpawn) {
-                            log("TIMEOUT: Unity non ha risposto SPAWN_SUCCESS", "#ff4444");
-                            resolve();
-                        }
-                    }, 12000);
-                });
-
-                log("Applicazione Grab e Move...");
-                await currentMapInstance.move({ x: -0.5, y: 0, z: 0.5 });
+                // SPAWN ASYNC: Aspetta che Unity risponda prima di andare avanti
+                currentMap = await XRi.spawn("map", data.glb, 0.4, {x:-0.5, y:0, z:0.5}, {x:0, y:180, z:0});
                 
-                document.getElementById('map-name').innerText = mapData.name;
+                document.getElementById('map-label').innerText = data.name;
+                currentMap.setGrabbable(false); // Blocca la mappa
             }
         }
 
@@ -166,33 +72,14 @@
             updateMapAR();
         }
 
-        function animate() {
-            if (currentMapInstance) {
-                currentMapInstance.rotate(180,5); 
-                currentMapInstance.setGrabbable(false);
-            }
-            requestAnimationFrame(animate);
-        }
-
         function launchGame() {
-            const selectedMap = maps[currentIndex];
-            window.location.href = `personaggi.html?map=${encodeURIComponent(selectedMap.glb)}`;
+            window.location.href = `personaggi.html?map=${encodeURIComponent(maps[currentIndex].glb)}`;
         }
 
-        // --- START ---
+        // Partenza
         window.onload = () => {
-            const start = async () => {
-                if (window.XRi) {
-                    XRi.initMultiplayer();
-                    await updateMapAR();
-                    animate();
-                } else {
-                    log("ERRORE: XRi.js non trovato!", "#ff4444");
-                }
-            };
-
-            if (window.vuplex) start();
-            else window.addEventListener('vuplexready', start);
+            if (window.vuplex) updateMapAR();
+            else window.addEventListener('vuplexready', updateMapAR);
         };
     </script>
 </body>
