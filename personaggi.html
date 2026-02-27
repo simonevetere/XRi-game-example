@@ -72,19 +72,21 @@
     let selectedHeroId = null;
     let heroInstances = {};
 
-    // 1. Funzione di Log (integrata con XRi.js come abbiamo discusso)
+    let local_url = new URLSearchParams(window.location.search);
+    let local_debug = local_url.get('debug') || false;
+
     function log(msg, color = "#00ff00") {
-        console.log(msg);
+        if(!local_debug) return;
+        
+        const overlay = document.getElementById('debug-overlay');
         const content = document.getElementById('debug-content');
-        if(content) {
-            const entry = document.createElement('div');
-            entry.style.color = color;
-            entry.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            content.insertBefore(entry, content.firstChild);
-        }
+        overlay.style.display = 'block';
+        const entry = document.createElement('div');
+        entry.style.color = color;
+        entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${msg}`;
+        content.insertBefore(entry, content.firstChild);
     }
 
-    // 2. Spawn Simultaneo
     async function spawnAllHeroes() {
         log("Evocazione eroi...");
         XRi.clearAll();

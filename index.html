@@ -85,7 +85,7 @@
     <script>
 
     let local_url = new URLSearchParams(window.location.search);
-    let local_debug = params.get('debug') || false;
+    let local_debug = local_url.get('debug') || false;
 
     const RAW_MAPS_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/";
     const maps = [
