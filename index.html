@@ -136,13 +136,13 @@
             document.getElementById('map-name').innerText = "Attesa Unity...";
 
             if (window.XRi) {
-                log("Comando Spawn inviato per: " + mapData.id);
                 XRi.clearAll();
                 
                 currentMapInstance = await XRi.spawn("preview_map", mapData.glb, 0.5);
 
-                log("Applicazione Grab e Move...");
                 await currentMapInstance.move({ x: -0.5, y: 0, z: 0.5 });
+
+                currentMapInstance.setGrabbable(false);
                 
                 document.getElementById('map-name').innerText = mapData.name;
             }
@@ -155,14 +155,9 @@
 
         let setgrabbable_ = false; 
 
-        function animate() {
+        async function animate() {
             if (currentMapInstance) {
-                if(!setgrabbable_){
-                    currentMapInstance.rotate(180,5);
-                    currentMapInstance.setGrabbable(false);
-                    setgrabbable_ = true;
-                }
-
+                await currentMapInstance.rotate(180,5);
             }
             requestAnimationFrame(animate);
         }
@@ -178,14 +173,13 @@
                 if (window.XRi) {
                     XRi.initMultiplayer();
                     await updateMapAR();
-                    animate();
+                    await animate();
                 } else {
                     log("ERRORE: XRi.js non trovato!", "#ff4444");
                 }
             };
 
             if (window.vuplex) start();
-            else window.addEventListener('vuplexready', start);
         };
     </script>
 </body>
