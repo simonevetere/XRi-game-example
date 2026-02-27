@@ -122,7 +122,7 @@
             window.location.href = `personaggi.html?map=${encodeURIComponent(selectedMap.glb)}`;
         }
 
-        window.onload = () => async () {
+        window.onload = () => async function() {
             if (window.XRi) {
                 XRi.initMultiplayer();
                 await updateMapAR();
