@@ -13,8 +13,9 @@
         .map-name { font-size: 3rem; font-weight: bold; text-shadow: 0 0 15px #00d1ff; }
         .btn-enter { margin-top: 30px; padding: 20px 60px; font-size: 2rem; background: #00d1ff; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; }
         
+        /* OVERLAY DEBUG GIGANTE */
         #debug-overlay { 
-            position:fixed; top:0; left:0; width:100%; height:100%; 
+            display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
             background:rgba(0,0,0,0.8); z-index:9999; padding:20px; box-sizing: border-box;
             border: 5px solid #ff4444; overflow-y: auto; font-family: monospace; font-size: 1.5rem;
         }
@@ -78,6 +79,16 @@
         window.onload = () => {
             if (window.vuplex) updateMapAR();
             else window.addEventListener('vuplexready', updateMapAR);
+        };
+        window.onerror = function(message, source, lineno, colno, error) {
+            const errorMsg = `JS ERROR: ${message} alla riga ${lineno}`;
+            if (window.XRi) {
+                XRi.internalLog(errorMsg, "#ff4444");
+            } else {
+                const div = document.getElementById('debug-content');
+                if (div) div.innerHTML = `<div style="color:red">${errorMsg}</div>` + div.innerHTML;
+            }
+            return false;
         };
     </script>
 </body>
