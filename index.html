@@ -75,21 +75,24 @@
             window.location.href = `personaggi.html?map=${encodeURIComponent(maps[currentIndex].glb)}`;
         }
 
-        // Partenza
-        window.onload = () => {
-            if (window.vuplex) updateMapAR();
-            else window.addEventListener('vuplexready', updateMapAR);
-        };
-        window.onerror = function(message, source, lineno, colno, error) {
-            const errorMsg = `JS ERROR: ${message} alla riga ${lineno}`;
-            if (window.XRi) {
-                XRi.internalLog(errorMsg, "#ff4444");
+        function init() {
+            const debug = document.getElementById('debug-overlay');
+            if(debug) debug.style.display = 'block';
+            
+            XRi.internalLog("Pagina Caricata, cerco Vuplex...");
+
+            if (window.vuplex) {
+                XRi.internalLog("Vuplex già presente");
+                updateMapAR();
             } else {
-                const div = document.getElementById('debug-content');
-                if (div) div.innerHTML = `<div style="color:red">${errorMsg}</div>` + div.innerHTML;
+                window.addEventListener('vuplexready', () => {
+                    XRi.internalLog("Evento vuplexready ricevuto!");
+                    updateMapAR();
+                });
             }
-            return false;
-        };
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
