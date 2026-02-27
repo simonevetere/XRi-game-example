@@ -83,6 +83,10 @@
     </div>
 
     <script>
+
+    let local_url = new URLSearchParams(window.location.search);
+    let local_debug = params.get('debug') || false;
+
     const RAW_MAPS_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/";
     const maps = [
         { id: 'swamp', name: 'PALUDE', glb: RAW_MAPS_BASE + 'swamp_location.glb' },
@@ -95,6 +99,8 @@
     let isRotating = false;
 
     function log(msg, color = "#00ff00") {
+        if(!local_debug) return;
+        
         const overlay = document.getElementById('debug-overlay');
         const content = document.getElementById('debug-content');
         overlay.style.display = 'block';
