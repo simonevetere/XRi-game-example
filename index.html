@@ -94,7 +94,7 @@
             if (window.XRi) {
                 XRi.clearAll();
                 
-                currentMapInstance = await XRi.spawn("preview_map", mapData.glb, 1);
+                currentMapInstance = XRi.spawn("preview_map", mapData.glb, 0.5);
                 
                 currentMapInstance.setGrabbable(false);
 
@@ -125,7 +125,7 @@
         window.onload = () => async function() {
             if (window.XRi) {
                 XRi.initMultiplayer();
-                await updateMapAR();
+                updateMapAR();
                 animate();
             }
         };
