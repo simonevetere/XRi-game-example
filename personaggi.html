@@ -38,11 +38,22 @@
             box-shadow: 0 0 30px rgba(0, 255, 68, 0.5);
         }
 
+        /* DEBUG OVERLAY - OTTIMIZZATO PER VISORE */
         #debug-overlay {
             display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; 
             background:rgba(0,0,0,0.95); z-index:9999; padding:40px; 
             color: #00ff00; font-family: monospace; overflow-y: auto; 
-            border: 10px solid red; font-size: 2rem;
+            border: 10px solid red; font-size: 2rem; line-height: 1.4;
+        }
+
+        .debug-close-btn {
+            position: fixed; top: 20px; right: 20px; padding: 20px 40px;
+            background: #ff4444; color: white; font-size: 2rem;
+            border: none; border-radius: 15px; cursor: pointer; z-index: 10000;
+        }
+
+        #debug-content div {
+            border-bottom: 1px solid #444; margin-bottom: 15px; padding-bottom: 10px;
         }
     </style>
 </head>
@@ -56,8 +67,8 @@
         <button class="btn-confirm" id="btn-confirm" onclick="confirmChoice()">CONFERMA SCELTA</button>
         
         <div id="debug-overlay">
-            <button onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
-            <div id="debug-content"></div>
+            <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
+            <div id="debug-content" style="margin-top: 100px;"></div>
         </div>
     </div>
 

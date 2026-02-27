@@ -149,6 +149,10 @@
         updateMapAR();
     }
 
+    function launchGame() {
+        window.location = "/personaggi.html?debug=true";
+    }
+
     window.onload = () => {
         if (XRi.isReady) {
             XRi.initMultiplayer();
