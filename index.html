@@ -32,6 +32,7 @@
         .arrow { font-size: 10rem; color: #00d1ff; cursor: pointer; transition: 0.3s; user-select: none; }
         .arrow:hover { transform: scale(1.2); color: white; }
         .map-name { font-size: 2.5rem; color: #00d1ff; margin-top: 20px; font-weight: bold; }
+        
         .btn-enter {
             margin-top: 40px; padding: 20px 80px; font-size: 1.8rem;
             background: #00d1ff; color: black; border: none; border-radius: 50px;
@@ -39,11 +40,22 @@
             box-shadow: 0 0 30px rgba(0, 209, 255, 0.5);
         }
 
-        /* DEBUG OVERLAY */
+        /* DEBUG OVERLAY - OTTIMIZZATO PER VISORE */
         #debug-overlay {
             display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; 
-            background:rgba(0,0,0,0.9); z-index:9999; padding:20px; color: #00ff00;
-            font-family: monospace; overflow-y: auto; border: 4px solid red;
+            background:rgba(0,0,0,0.95); z-index:9999; padding:40px; 
+            color: #00ff00; font-family: monospace; overflow-y: auto; 
+            border: 10px solid red; font-size: 2rem; line-height: 1.4;
+        }
+
+        .debug-close-btn {
+            position: fixed; top: 20px; right: 20px; padding: 20px 40px;
+            background: #ff4444; color: white; font-size: 2rem;
+            border: none; border-radius: 15px; cursor: pointer; z-index: 10000;
+        }
+
+        #debug-content div {
+            border-bottom: 1px solid #444; margin-bottom: 15px; padding-bottom: 10px;
         }
     </style>
 </head>
@@ -55,8 +67,8 @@
         <h1>BENVENUTO NEL GIOCO</h1>
         
         <div id="debug-overlay">
-            <button onclick="this.parentElement.style.display='none'" style="float:right; padding:10px; background:red; color:white;">CHIUDI</button>
-            <div id="debug-content"></div>
+            <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
+            <div id="debug-content" style="margin-top: 100px;"></div>
         </div>
 
         <div class="carousel-container">
@@ -65,9 +77,9 @@
             <div class="arrow" onclick="changeMap(1)">&#10095;</div>
         </div>
 
-        <div class="map-name" id="map-name">PALUDE</div>
+        <div class="map-name" id="map-name">CARICAMENTO...</div>
         <button class="btn-enter" onclick="launchGame()">ENTRA</button>
-        <button class="btn-enter" style="position: fixed; top: 2%; right: 2%; padding: 10px 30px; font-size: 1.2rem;" onclick="window.location.reload()">reload</button>
+        <button class="btn-enter" style="position: fixed; top: 2%; right: 2%; padding: 10px 30px; font-size: 1.2rem;" onclick="window.location.reload()">RELOAD</button>
     </div>
 
     <script>
@@ -80,63 +92,69 @@
 
         let currentIndex = 0;
         let currentMapInstance = null;
-        let resolveSpawn = null; // Funzione per sbloccare l'attesa
+        let resolveSpawn = null;
 
-        function log(msg) {
+        // --- FUNZIONE DI LOG GIGANTE ---
+        function log(msg, color = "#00ff00") {
             const overlay = document.getElementById('debug-overlay');
-            const div = document.getElementById('debug-content');
+            const content = document.getElementById('debug-content');
+            overlay.style.display = 'block';
             
-            // Forza l'apertura dell'overlay appena c'è un log
-            overlay.style.display = 'block'; 
-            
-            div.innerHTML = `[${new Date().toLocaleTimeString()}] > ${msg}<br>` + div.innerHTML;
+            const entry = document.createElement('div');
+            entry.style.color = color;
+            entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${msg}`;
+            content.insertBefore(entry, content.firstChild);
         }
 
+        // --- VUPLEX BRIDGE ---
         function onMessage(e) {
-            log("RICEVUTO: " + e.data);
-            
+            // Escludiamo i log di posizione per non intasare lo schermo
+            if (e.data.includes("POSITION_DATA")) return;
+
+            log("RICEVUTO: " + e.data, "#00d1ff");
+
             try {
                 const data = JSON.parse(e.data);
-                
-                // Controlliamo se il messaggio è quello che aspettiamo
                 if (data.type === "SPAWN_SUCCESS" || data.command === "SPAWN_SUCCESS") {
-                    log("!!! SUCCESS DETECTED !!!");
+                    log("SUCCESS: Unity ha confermato lo spawn!", "#ffff00");
                     if (resolveSpawn) {
                         resolveSpawn();
                         resolveSpawn = null;
                     }
                 }
             } catch(err) {
-                log("Errore parsing JSON: " + err.message);
+                log("Errore JSON: " + err.message, "#ff4444");
             }
         }
 
         if (window.vuplex) window.vuplex.addEventListener('message', onMessage);
         else window.addEventListener('vuplexready', () => window.vuplex.addEventListener('message', onMessage));
 
+        // --- AR LOGIC ---
         async function updateMapAR() {
             const mapData = maps[currentIndex];
-            document.getElementById('map-name').innerText = mapData.name;
+            document.getElementById('map-name').innerText = "Attesa Unity...";
 
             if (window.XRi) {
-                log("Pulizia e Spawn: " + mapData.id);
+                log("Comando Spawn inviato per: " + mapData.id);
                 XRi.clearAll();
                 
-                // 1. Lanciamo lo spawn
+                // 1. Spawn
                 currentMapInstance = XRi.spawn("preview_map", mapData.glb, 0.5);
 
-                // 2. ASPETTIAMO che Unity risponda SPAWN_SUCCESS
-                // Creiamo una promessa che viene risolta solo quando onMessage riceve la conferma
+                // 2. Attesa Reale del messaggio da Unity
                 await new Promise((resolve) => {
                     resolveSpawn = resolve;
-                    // Timeout di sicurezza 10s per non bloccare tutto se Unity non risponde
-                    setTimeout(resolve, 10000); 
+                    // Timeout di sicurezza 12 secondi
+                    setTimeout(() => {
+                        if(resolveSpawn) {
+                            log("TIMEOUT: Unity non ha risposto SPAWN_SUCCESS", "#ff4444");
+                            resolve();
+                        }
+                    }, 12000);
                 });
-
-                log("Conferma ricevuta, applico Grab e Move");
                 
-                currentMapInstance.setGrabbable(false);
-                await currentMapInstance.move({ x: -0.5, y: 0, z: 0.5 });
+                document.getElementById('map-name').innerText = mapData.name;
             }
         }
 
@@ -147,7 +165,9 @@
 
         function animate() {
             if (currentMapInstance) {
-                currentMapInstance.rotate(180,3); 
+                currentMapInstance.rotate(180,5); 
+                currentMapInstance.setGrabbable(false);
+                await currentMapInstance.move({ x: -0.5, y: 0, z: 0.5 });
             }
             requestAnimationFrame(animate);
         }
@@ -157,16 +177,20 @@
             window.location.href = `personaggi.html?map=${encodeURIComponent(selectedMap.glb)}`;
         }
 
+        // --- START ---
         window.onload = () => {
-            if (window.XRi) {
-                XRi.initMultiplayer();
-                updateMapAR();
-                animate();
-            } else {
-                // Se non c'è XRi, apri il log per avvisare
-                document.getElementById('debug-overlay').style.display = 'block';
-                log("XRi non trovato!");
-            }
+            const start = async () => {
+                if (window.XRi) {
+                    XRi.initMultiplayer();
+                    await updateMapAR();
+                    animate();
+                } else {
+                    log("ERRORE: XRi.js non trovato!", "#ff4444");
+                }
+            };
+
+            if (window.vuplex) start();
+            else window.addEventListener('vuplexready', start);
         };
     </script>
 </body>
