@@ -79,17 +79,21 @@
             const debug = document.getElementById('debug-overlay');
             if(debug) debug.style.display = 'block';
             
-            XRi.internalLog("Pagina Caricata, cerco Vuplex...");
+            XRi.internalLog("Pagina Caricata. Sistema in pausa per 10 secondi...");
 
-            if (window.vuplex) {
-                XRi.internalLog("Vuplex già presente");
-                updateMapAR();
-            } else {
-                window.addEventListener('vuplexready', () => {
-                    XRi.internalLog("Evento vuplexready ricevuto!");
+            // Avviamo il controllo dopo 10 secondi
+            setTimeout(() => {
+                if (XRi.isReady) {
+                    XRi.internalLog("Vuplex già presente, avvio updateMapAR...");
                     updateMapAR();
-                });
-            }
+                } else {
+                    XRi.internalLog("In attesa di vuplexready...");
+                    window.addEventListener('vuplexready', () => {
+                        XRi.internalLog("Evento vuplexready ricevuto!");
+                        updateMapAR();
+                    });
+                }
+            }, 10000); // 10000ms = 10 secondi
         }
 
         window.addEventListener('DOMContentLoaded', init);
