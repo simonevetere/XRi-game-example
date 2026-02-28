@@ -115,7 +115,6 @@
                 try {
                     await XRi.spawn(asset.id, asset.url, 0.1, { x: 0, y: -50, z: 0 });
                     
-                    // Segnamo l'asset come pronto
                     localStorage.setItem(`ready_${asset.id}`, "true");
                     
                     log(`[OK] ${asset.id} caricato in Unity`, "#00ff00");

@@ -119,24 +119,35 @@
     }
 
     async function updateMapAR() {
-
         const mapData = maps[currentIndex];
         document.getElementById('map-name').innerText = "Recupero...";
         
-        // Controlliamo se la mappa è stata precaricata nella pagina di loading
-        const isReady = localStorage.getItem(`ready_${mapData.id}`);
-
         log(`Recupero ${mapData.id} dalla cache Unity...`);
         currentMapInstance = XRi.getClassById(mapData.id);
 
-        currentMapInstance.setPosition({ x: 0, y: 1, z: 0.5 }, 0);
-        currentMapInstance.zoom(5);
-        currentMapInstance.resetRotation(0);
-        currentMapInstance.setGrabbable(false);
-        
-        document.getElementById('map-name').innerText = mapData.name;
+        if (currentMapInstance) {
+            // Controlliamo se questa mappa specifica è già stata inizializzata in AR
+            const alreadySetup = localStorage.getItem(`setup_done_${mapData.id}`);
 
-        if (!isRotating) startRotationLoop();
+            if (!alreadySetup) {
+                log(`Prima inizializzazione per ${mapData.id}. Eseguo zoom e posizionamento.`);
+                
+                await currentMapInstance.setPosition({ x: 0, y: 1, z: 0.5 }, 0);
+                await currentMapInstance.zoom(5, 1);
+                await currentMapInstance.resetRotation(0);
+                await currentMapInstance.setGrabbable(false);
+                
+                localStorage.setItem(`setup_done_${mapData.id}`, "true");
+            } else {
+                log(`${mapData.id} già configurato. Lo porto solo in vista.`);
+                
+                currentMapInstance.setPosition({ x: 0, y: 1, z: 0.5 }, 0);
+            }
+
+            document.getElementById('map-name').innerText = mapData.name;
+
+            if (!isRotating) startRotationLoop();
+        }
     }
 
     async function startRotationLoop() {
@@ -153,7 +164,6 @@
     function changeMap(dir) {
         if (currentMapInstance) {
             currentMapInstance.setPosition({ x: 0, y: -50, z: 0 }, 0);
-            currentMapInstance.zoom(0.02);
         }
         
         currentIndex = (currentIndex + dir + maps.length) % maps.length;
