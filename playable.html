@@ -154,8 +154,9 @@
             if (oldInst) {
                 await oldInst.setPosition({ x: oldHeroData.x, y: 1, z: 0.5 }, 0.5);
 
-                //wating end of startRotationLoop()
-                setTimeout( oldInst.resetRotation(0), 6000);
+                await oldInst.stopAnimation("");
+                await oldInst.resetRotation(0,1);
+                await oldInst.startAnimation("");
             }
         }
         
