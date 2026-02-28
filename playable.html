@@ -116,9 +116,10 @@
                 heroInstances[hero.id] = XRi.getClassById(hero.id);
             }
 
-            await heroInstances[hero.id].setPosition({ x: hero.x, y: 1, z: 0.5 }, 0.5);
-            await heroInstances[hero.id].resetRotation(0);
-            heroInstances[hero.id].setGrabbable(true); // Fondamentale per handleSelection
+            heroInstances[hero.id].setPosition({ x: hero.x, y: 1, z: 0.5 }, 0);
+            heroInstances[hero.id].zoom(50);
+            heroInstances[hero.id].resetRotation(0);
+            heroInstances[hero.id].setGrabbable(true);
             heroInstances[hero.id].startAnimation("");
         }
         log("Tutti gli eroi schierati.");
@@ -165,12 +166,6 @@
         document.getElementById('btn-confirm').style.display = 'block';
 
         log(`Selezionato: ${heroData.name}`, "#ffff00");
-
-        for (const h of heroes) {
-            if (h.id !== heroId) {
-                heroInstances[h.id].setPosition({ x: h.x, y: -50, z: 0.5 }, 0.5);
-            }
-        }
 
         await chosen.setPosition({ x: 0, y: 1, z: 0.3 }, 0.5);
         startRotationLoop(chosen);
