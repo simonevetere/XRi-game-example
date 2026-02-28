@@ -93,7 +93,6 @@
         log(`Inizializzazione Mondo...`);
         log(`Mappa: ${mapId} | Eroe: ${heroId}`);
 
-        // 1. Recupero istanze dalla cache Unity
         const map = XRi.getClassById(mapId);
         const hero = XRi.getClassById(heroId);
 
@@ -103,7 +102,7 @@
             await map.setPosition({ x: 0, y: 0.5, z: 0.5 }, 0);
             await map.zoom(1, 0.5);
             await map.resetRotation(0);
-            await map.setGrabbable(false); // La mappa sta ferma
+            await map.setGrabbable(false);
             
             log("Mappa posizionata.");
 
