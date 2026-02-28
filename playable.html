@@ -153,9 +153,8 @@
             const oldInst = heroInstances[selectedHeroId];
             if (oldInst) {
                 await oldInst.setPosition({ x: oldHeroData.x, y: 1, z: 0.5 }, 0.5);
-
                 await oldInst.stopAnimation("");
-                await oldInst.resetRotation(0,1);
+                await oldInst.resetRotation(0,10);
                 await oldInst.startAnimation("");
             }
         }

@@ -105,6 +105,7 @@
         if (map && hero) {
             document.getElementById('status').innerText = "Posizionamento mappa...";
             await map.setPosition({ x: 0, y: 1, z: 0.8 }, 0);
+            await map.rotate(90);
             await map.zoom(2, 0.5);
             await map.resetRotation(0);
             await map.setGrabbable(false);
@@ -114,7 +115,8 @@
             document.getElementById('status').innerText = "Spawn eroe...";
             
             await hero.parent(mapId); 
-            
+            await hero.stopAnimation("");
+            await hero.resetRotation(0);
             await hero.setPosition({ x: 0, y: 1.1, z: 0.8 }, 0.5);
             await hero.setGrabbable(true);
             
