@@ -79,7 +79,7 @@
     log('debug:'+heroId);
     
     function log(msg, color = "#00ff00") {
-        if(!debug_active) return;
+        if(!local_debug) return;
         const overlay = document.getElementById('debug-overlay');
         const content = document.getElementById('debug-content');
         overlay.style.display = 'block';
