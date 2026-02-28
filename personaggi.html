@@ -84,8 +84,9 @@
     let heroInstances = {};
 
     let local_url = new URLSearchParams(window.location.search);
-    let local_debug = local_url.get('debug') || false;
+    let local_debug = local_url.get('debug') || true;
     log('debug:'+local_debug);
+    log('debug:'+local_url);
 
     function log(msg, color = "#00ff00") {
         if(!local_debug) return;
