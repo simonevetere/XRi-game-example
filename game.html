@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>XRi - Gameplay</title>
+    <script src="https://xri.onl/XRi.js?v=c"></script>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { 
+            margin: 0; padding: 0; width: 100vw; height: 100vh; 
+            overflow: hidden; background-color: #000;
+            font-family: 'Segoe UI', sans-serif; color: white;
+        }
+
+        #fantasy-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('assets/img/background.png');
+            background-size: cover; background-position: center;
+            filter: brightness(0.2); z-index: 1;
+        }
+
+        #ui-layer {
+            position: relative; z-index: 10;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 0%, rgba(0,0,0,0.6) 100%);
+            padding-top: 50px;
+        }
+
+        h1 { font-size: 3rem; text-shadow: 0 0 20px #00d1ff; margin-bottom: 10px; color: #00d1ff; }
+        .status-text { font-size: 1.5rem; color: #aaa; margin-bottom: 30px; }
+
+        /* DEBUG OVERLAY - STESSO STILE */
+        #debug-overlay {
+            display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; 
+            background:rgba(0,0,0,0.9); z-index:9999; padding:40px; 
+            color: #00ff00; font-family: monospace; overflow-y: auto; 
+            border: 10px solid #00d1ff; font-size: 1.8rem;
+        }
+
+        .debug-close-btn {
+            position: fixed; top: 20px; right: 20px; padding: 20px 40px;
+            background: #ff4444; color: white; font-size: 1.5rem; border-radius: 10px;
+        }
+
+        .reload-btn {
+            position: fixed; bottom: 20px; right: 20px; padding: 20px 40px;
+            background: #444; color: white; font-size: 1.5rem; border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="fantasy-bg"></div>
+
+    <div id="ui-layer">
+        <h1>INIZIA IL GIOCO</h1>
+        <div class="status-text" id="status">Sincronizzazione AR...</div>
+        
+        <div id="debug-overlay">
+            <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
+            <div id="debug-content" style="margin-top: 100px;"></div>
+        </div>
+
+        <button class="reload-btn" onclick="window.location.reload()">RELOAD</button>
+    </div>
+
+    <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const debug_active = urlParams.get('debug') === 'true';
+    const heroId = urlParams.get('hero');
+    const mapId = urlParams.get('map');
+
+    function log(msg, color = "#00ff00") {
+        if(!debug_active) return;
+        const overlay = document.getElementById('debug-overlay');
+        const content = document.getElementById('debug-content');
+        overlay.style.display = 'block';
+        const entry = document.createElement('div');
+        entry.style.color = color;
+        entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${msg}`;
+        content.insertBefore(entry, content.firstChild);
+    }
+
+    async function initWorld() {
+        if (!heroId || !mapId) {
+            log("ERRORE: Dati mancanti nell'URL!", "red");
+            document.getElementById('status').innerText = "Errore Parametri";
+            return;
+        }
+
+        log(`Inizializzazione Mondo...`);
+        log(`Mappa: ${mapId} | Eroe: ${heroId}`);
+
+        // 1. Recupero istanze dalla cache Unity
+        const map = XRi.getClassById(mapId);
+        const hero = XRi.getClassById(heroId);
+
+        if (map && hero) {
+            // 2. Setup Mappa (Centro stanza, scala 1:1)
+            document.getElementById('status').innerText = "Posizionamento mappa...";
+            await map.setPosition({ x: 0, y: 0.5, z: 0.5 }, 0);
+            await map.zoom(1, 0.5);
+            await map.resetRotation(0);
+            await map.setGrabbable(false); // La mappa sta ferma
+            
+            log("Mappa posizionata.");
+
+            document.getElementById('status').innerText = "Spawn eroe...";
+            
+            await hero.parent(mapId); 
+            
+            await hero.setPosition({ x: 0, y: 0.1, z: 0 }, 0.5);
+            await hero.setGrabbable(true);
+            
+            log("Eroe collegato alla mappa.");
+            document.getElementById('status').innerText = "PRONTI!";
+        } else {
+            log("ERRORE: Istanze non trovate. Verifica gli ID.", "red");
+        }
+    }
+
+    window.onload = () => {
+        if (XRi.isReady) {
+            XRi.initMultiplayer();
+            initWorld();
+        } else {
+            window.addEventListener('vuplexready', () => {
+                XRi.initMultiplayer();
+                initWorld();
+            });
+        }
+    };
+    </script>
+</body>
+</html>

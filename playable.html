@@ -153,6 +153,7 @@
             const oldInst = heroInstances[selectedHeroId];
             if (oldInst) {
                 oldInst.setPosition({ x: oldHeroData.x, y: 1, z: 0.5 }, 0.5);
+                oldInst.resetRotation(0);
             }
         }
         
@@ -171,7 +172,9 @@
     }
 
     function confirmChoice() {
-
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentMap = urlParams.get('map');
+        
         for (const h of heroes) {
             if (h.id !== selectedHeroId) {
                 heroInstances[h.id].setPosition({ x: 0, y: -50, z: 0 }, 0);
@@ -180,7 +183,9 @@
 
         log("Scelta confermata! Caricamento mappa...");
 
-        setTimeout(window.location.href = "boh.html?hero=" + selectedHeroId, 10000);
+        const destination = `game.html?hero=${selectedHeroId}&map=${currentMap}`;
+
+        setTimeout(window.location.href = destination, 1000);
     }
 
     window.onload = () => {
