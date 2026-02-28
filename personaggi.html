@@ -64,7 +64,9 @@
     <div id="ui-layer">
         <h1 id="title-text">TOCCA L'EROE PER SCEGLIERE</h1>
         <div class="map-name" id="choice-text"></div>
+        <button class="btn-confirm" onclick="spawnAllHeroes()">START</button>
         <button class="btn-confirm" id="btn-confirm" onclick="confirmChoice()">CONFERMA SCELTA</button>
+        <button class="btn-enter" class="debug-close-btn" onclick="window.location.reload()">RELOAD</button>
         
         <div id="debug-overlay">
             <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
@@ -163,7 +165,6 @@
         const init = () => {
             XRi.initMultiplayer();
             XRi.noCache();
-            spawnAllHeroes();
         };
         if (window.XRi && XRi.isReady) init();
         else window.addEventListener('vuplexready', init);
