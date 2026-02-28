@@ -129,8 +129,9 @@
         log(`Recupero ${mapData.id} dalla cache Unity...`);
         currentMapInstance = XRi.getClassById(mapData.id);
 
-        await currentMapInstance.setPosition({ x: 0, y: 1, z: 0.5 }, 0.5);
-        await currentMapInstance.resetRotation(0);
+        currentMapInstance.setPosition({ x: 0, y: 1, z: 0.5 }, 0);
+        currentMapInstance.zoom(50);
+        currentMapInstance.resetRotation(0);
         currentMapInstance.setGrabbable(false);
         
         document.getElementById('map-name').innerText = mapData.name;
@@ -152,6 +153,7 @@
     function changeMap(dir) {
         if (currentMapInstance) {
             currentMapInstance.setPosition({ x: 0, y: -50, z: 0 }, 0);
+            currentMapInstance.zoom(0.02);
         }
         
         currentIndex = (currentIndex + dir + maps.length) % maps.length;
