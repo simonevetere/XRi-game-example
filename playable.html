@@ -177,19 +177,28 @@
         const urlParams = new URLSearchParams(window.location.search);
         const currentMap = urlParams.get('map');
         
+        log("Scelta confermata! Pulizia scena...");
+
         for (const h of heroes) {
             if (h.id !== selectedHeroId) {
-                heroInstances[h.id].setPosition({ x: 0, y: -50, z: 0 }, 0);
+                if(heroInstances[h.id]) {
+                    heroInstances[h.id].setPosition({ x: 0, y: -50, z: 0 }, 0);
+                }
             }
         }
 
-        heroes[selectedHeroId].resetRotation(0);
+        if (heroInstances[selectedHeroId]) {
+            currentRotatingId = null;
+            heroInstances[selectedHeroId].resetRotation(0);
+        }
 
-        log("Scelta confermata! Caricamento mappa...");
+        const destination = `game.html?debug=true&hero=${selectedHeroId}&map=${currentMap}`;
 
-        const destination = `game.html??debug=true&hero=${selectedHeroId}&map=${currentMap}`;
-
-        setTimeout(window.location.href = destination, 6000);
+        log("Cambio pagina tra 6 secondi...");
+        
+        setTimeout(() => {
+            window.location.href = destination;
+        }, 6000); 
     }
 
     window.onload = () => {
