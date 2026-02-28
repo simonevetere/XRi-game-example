@@ -113,7 +113,7 @@
                 updateUI(currentProgress, `Scaricamento: ${asset.id}...`);
                 
                 try {
-                    await XRi.spawn(asset.id, asset.url, 0.01, { x: 1, y: 1, z: 1 });
+                    await XRi.spawn(asset.id, asset.url, 0.01, { x: 0, y: -50, z: 0 });
                     
                     // Segnamo l'asset come pronto
                     localStorage.setItem(`ready_${asset.id}`, "true");

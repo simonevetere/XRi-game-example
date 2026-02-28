@@ -116,10 +116,10 @@
                 heroInstances[hero.id] = XRi.getClassById(hero.id);
             }
 
-            heroInstances[hero.id].setPosition({ x: hero.x, y: 1, z: 0.5 }, 0);
-            heroInstances[hero.id].zoom(50);
-            heroInstances[hero.id].resetRotation(0);
-            heroInstances[hero.id].setGrabbable(true);
+            await heroInstances[hero.id].setPosition({ x: hero.x, y: 1, z: 0.5 }, 0);
+            await heroInstances[hero.id].zoom(10);
+            await heroInstances[hero.id].resetRotation(0);
+            await heroInstances[hero.id].setGrabbable(true);
             heroInstances[hero.id].startAnimation("");
         }
         log("Tutti gli eroi schierati.");
@@ -172,9 +172,16 @@
     }
 
     function confirmChoice() {
+
+        for (const h of heroes) {
+            if (h.id !== selectedHeroId) {
+                heroInstances[h.id].setPosition({ x: 0, y: -50, z: 0 }, 0);
+            }
+        }
+
         log("Scelta confermata! Caricamento mappa...");
-        // Qui puoi mandare al server multiplayer la scelta o cambiare pagina
-        window.location.href = "boh.html?hero=" + selectedHeroId;
+
+        setTimeout(window.location.href = "boh.html?hero=" + selectedHeroId, 10000);
     }
 
     window.onload = () => {
