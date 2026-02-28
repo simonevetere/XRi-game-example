@@ -64,7 +64,7 @@
     <div id="fantasy-bg"></div>
 
     <div id="ui-layer">
-        <h1>BENVENUTO NEL GIOCO</h1>
+        <h1>SCEGLI LA MAPPA</h1>
         
         <div id="debug-overlay">
             <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
@@ -77,8 +77,8 @@
             <div class="arrow" onclick="changeMap(1)">&#10095;</div>
         </div>
 
-        <div class="map-name" id="map-name">CARICAMENTO...</div>
-        <button class="btn-enter" onclick="launchGame()">ENTRA</button>
+        <div class="map-name" id="map-name">SCORRI LE MAPPE</div>
+        <button class="btn-enter" onclick="init()">ENTRA</button>
         <button class="btn-enter" class="debug-close-btn" onclick="window.location.reload()">RELOAD</button>
     </div>
 
@@ -150,15 +150,24 @@
     }
 
     function launchGame() {
-        window.location = "/XRi-game-example/personaggi.html/personaggi.html?debug=true";
+        window.location = "/XRi-game-example/personaggi.html?debug=true";
     }
 
-    window.onload = () => {
-        if (XRi.isReady) {
+    let initdone = false;
+
+    function init() {
+        if(!initdone){
             XRi.initMultiplayer();
             XRi.noCache();
+            initdone = true;
+        } else {
             updateMapAR();
         }
+    };
+
+    
+    window.onload = () => {
+        init();
     };
 </script>
 </body>
