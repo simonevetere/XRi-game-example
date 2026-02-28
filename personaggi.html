@@ -134,10 +134,28 @@
         });
     });
 
+    async function startRotationLoop(chosen) {
+        currentRotatingId = chosen.id; 
+
+        while (currentRotatingId === chosen.id) {
+            if (chosen) {
+                await chosen.rotate(180, 5);
+            } else {
+                await new Promise(r => setTimeout(r, 500));
+            }
+        }
+    }
+
     async function handleSelection(heroId) {
-        if (selectedHeroId) return;
+        if (selectedHeroId != heroId){
+            oldidhero = selectedHeroId;
+            selectedHeroId = null;
+            oldhero = hero[oldidhero];
+            oldhero = oldhero.setPosition({ x: oldhero.x, y: 1, z: 0.5 }, 0.5);
+        }
         
         selectedHeroId = heroId;
+        currentRotatingId = heroId;
         const heroData = heroes.find(h => h.id === heroId);
         
         document.getElementById('title-text').innerText = "HAI SCELTO:";
@@ -156,7 +174,8 @@
 
         // Porta quello scelto al centro e raddrizzalo
         const chosen = heroInstances[heroId];
-        await chosen.setPosition({ x: 0, y: 1, z: 0.5 }, 0.5);
+        await chosen.setPosition({ x: 0, y: 1, z: 0 }, 0.5);
+        startRotationLoop(chosen);
     }
 
     function confirmChoice() {
