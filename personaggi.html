@@ -117,8 +117,8 @@
 
             await inst.setPosition({ x: hero.x, y: 1, z: 0.5 }, 0);
             await inst.resetRotation(0);
-            await inst.setGrabbable(true);
-            await inst.startAnimation("");
+            inst.setGrabbable(true);
+            inst.startAnimation("");
             heroInstances[hero.id] = inst;
         }
         log("Tutti gli eroi sono pronti.");
