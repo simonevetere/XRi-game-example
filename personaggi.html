@@ -117,7 +117,6 @@
 
             await inst.setPosition({ x: hero.x, y: 1, z: 0.5 }, 0);
             await inst.resetRotation(0);
-            inst.setGrabbable(true);
             inst.startAnimation("");
             heroInstances[hero.id] = inst;
         }
@@ -151,7 +150,7 @@
         for (const hero of heroes) {
             if (hero.id !== heroId) {
                 // Comando ipotetico per distruggere singolo oggetto o lo spostiamo lontano
-                XRi._send({ command: "DESTROY_OBJECT", id: hero.id });
+                //XRi._send({ command: "DESTROY_OBJECT", id: hero.id });
             }
         }
 
