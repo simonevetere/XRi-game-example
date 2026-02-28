@@ -154,7 +154,7 @@
             if (oldInst) {
                 await oldInst.setPosition({ x: oldHeroData.x, y: 1, z: 0.5 }, 0.5);
                 await oldInst.stopAnimation("");
-                await oldInst.resetRotation(0,10);
+                await oldInst.resetRotation(0);
                 await oldInst.startAnimation("");
             }
         }
@@ -183,11 +183,13 @@
             }
         }
 
+        await heroes[selectedHeroId].resetRotation(0);
+
         log("Scelta confermata! Caricamento mappa...");
 
         const destination = `game.html?hero=${selectedHeroId}&map=${currentMap}`;
 
-        setTimeout(window.location.href = destination, 1000);
+        setTimeout(window.location.href = destination, 6000);
     }
 
     window.onload = () => {
