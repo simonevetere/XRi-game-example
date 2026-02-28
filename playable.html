@@ -117,7 +117,6 @@
             }
 
             await heroInstances[hero.id].setPosition({ x: hero.x, y: 1, z: 0.5 }, 0);
-            await heroInstances[hero.id].zoom(10);
             await heroInstances[hero.id].resetRotation(0);
             await heroInstances[hero.id].setGrabbable(true);
             heroInstances[hero.id].startAnimation("");
