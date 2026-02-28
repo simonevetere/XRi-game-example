@@ -71,7 +71,7 @@
         <h1 id="title-text">TOCCA L'EROE PER SCEGLIERE</h1>
         <div class="map-name" id="choice-text"></div>
         <button class="btn-confirm" id="btn-confirm" onclick="confirmChoice()">CONFERMA SCELTA</button>
-        <button class="reload-btn" onclick="window.location.reload()">RELOAD</button>
+        <button class="reload-btn" onclick="localStorage.clear(); window.location.reload()">RELOAD</button>
         
         <div id="debug-overlay">
             <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
@@ -151,7 +151,7 @@
             oldidhero = selectedHeroId;
             selectedHeroId = null;
             oldhero = hero[oldidhero];
-            oldhero = oldhero.setPosition({ x: oldhero.x, y: 1, z: 0.5 }, 0.5);
+            oldhero.setPosition({ x: oldhero.x, y: 1, z: 0.5 }, 0.5);
         }
         
         selectedHeroId = heroId;
@@ -181,7 +181,7 @@
     function confirmChoice() {
         log("Scelta confermata! Caricamento mappa...");
         // Qui puoi mandare al server multiplayer la scelta o cambiare pagina
-        window.location.href = "mappa.html?hero=" + selectedHeroId;
+        window.location.href = "boh.html?hero=" + selectedHeroId;
     }
 
     window.onload = () => {

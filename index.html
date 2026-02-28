@@ -3,43 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>XRi - Selezione Mondo</title>
+    <title>XRi - Loading Assets</title>
     <script src="https://xri.onl/XRi.js?v=c"></script>
     <style>
-        * { box-sizing: border-box; }
-        html, body { 
+        body { 
             margin: 0; padding: 0; width: 100vw; height: 100vh; 
-            overflow: hidden; background-color: #000;
-            font-family: 'Segoe UI', sans-serif; color: white;
-        }
-
-        #fantasy-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url('assets/img/background.png');
-            background-size: cover; background-position: center;
-            filter: brightness(0.3); z-index: 1;
-        }
-
-        #ui-layer {
-            position: relative; z-index: 10;
+            background-image: url('assets/img/background.png'); color: white; font-family: 'Segoe UI', sans-serif;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            width: 100%; height: 100%;
-            background: radial-gradient(circle, transparent 0%, rgba(0,0,0,0.4) 100%);
         }
-
-        h1 { font-size: 3rem; text-shadow: 0 0 20px #00d1ff; margin-bottom: 40px; }
-        .carousel-container { display: flex; align-items: center; gap: 40px; }
-        .arrow { font-size: 10rem; color: #00d1ff; cursor: pointer; transition: 0.3s; user-select: none; }
-        .arrow:hover { transform: scale(1.2); color: white; }
-        .map-name { font-size: 2.5rem; color: #00d1ff; margin-top: 20px; font-weight: bold; }
         
-        .btn-enter {
-            margin-top: 40px; padding: 20px 80px; font-size: 1.8rem;
-            background: #00d1ff; color: black; border: none; border-radius: 50px;
-            font-weight: bold; cursor: pointer; transition: 0.3s;
-            box-shadow: 0 0 30px rgba(0, 209, 255, 0.5);
+        .loader-container { width: 80%; text-align: center; }
+        
+        h2 { color: #00d1ff; text-shadow: 0 0 15px #00d1ff; font-size: 2rem; margin-bottom: 30px; }
+
+        .progress-track {
+            width: 100%; height: 20px; background: #222;
+            border-radius: 10px; border: 1px solid #00d1ff; overflow: hidden;
         }
 
+        .progress-fill {
+            width: 0%; height: 100%; background: #00d1ff;
+            box-shadow: 0 0 20px #00d1ff; transition: width 0.3s ease;
+        }
+
+        #status-text { margin-top: 20px; font-size: 1.2rem; color: #888; }
+        
         /* DEBUG OVERLAY - OTTIMIZZATO PER VISORE */
         #debug-overlay {
             display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; 
@@ -54,12 +42,6 @@
             border: none; border-radius: 15px; cursor: pointer; z-index: 10000;
         }
 
-        .reload-btn {
-            position: fixed; bottom: 20px; right: 20px; padding: 20px 40px;
-            background: #ff4444; color: white; font-size: 2rem;
-            border: none; border-radius: 15px; cursor: pointer; z-index: 10000;
-        }
-
         #debug-content div {
             border-bottom: 1px solid #444; margin-bottom: 15px; padding-bottom: 10px;
         }
@@ -67,106 +49,101 @@
 </head>
 <body>
 
-    <div id="fantasy-bg"></div>
-
-    <div id="ui-layer">
-        <h1>SCEGLI LA MAPPA</h1>
-        
-        <div id="debug-overlay">
-            <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
-            <div id="debug-content" style="margin-top: 100px;"></div>
+    <div class="loader-container">
+        <h2 id="main-title">CARICAMENTO ASSETS...</h2>
+        <div class="progress-track">
+            <div id="progress-bar" class="progress-fill"></div>
         </div>
+        <div id="status-text">Inizializzazione Unity...</div>
+    </div>
 
-        <div class="carousel-container">
-            <div class="arrow" onclick="changeMap(-1)">&#10094;</div>
-            <div class="arrow"></div>
-            <div class="arrow" onclick="changeMap(1)">&#10095;</div>
-        </div>
-
-        <div class="map-name" id="map-name">SCORRI LE MAPPE</div>
-        <button class="btn-enter" onclick="launchGame()">ENTRA</button>
-        <button class="reload-btn" onclick="window.location.reload()">RELOAD</button>
+    
+    <div id="debug-overlay">
+        <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
+        <div id="debug-content" style="margin-top: 100px;"></div>
     </div>
 
     <script>
+         function log(msg, color = "#00ff00") {
+            if(!local_debug) return;
 
-    let local_url = new URLSearchParams(window.location.search);
-    let local_debug = local_url.get('debug') || true;
-    log('debug:'+local_debug);
-    log('debug:'+local_url);
-
-    const RAW_MAPS_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/";
-    const maps = [
-        { id: 'swamp', name: 'PALUDE', glb: RAW_MAPS_BASE + 'swamp_location.glb' },
-        { id: 'sand', name: 'DESERTO', glb: RAW_MAPS_BASE + 'sands_location.glb' },
-        { id: 'crypt', name: 'CRIPTA', glb: RAW_MAPS_BASE + 'crypt_location.glb' }
-    ];
-
-    let currentIndex = 0;
-    let currentMapInstance = null;
-    let isRotating = false;
-
-    function log(msg, color = "#00ff00") {
-        if(!local_debug) return;
-
-        const overlay = document.getElementById('debug-overlay');
-        const content = document.getElementById('debug-content');
-        overlay.style.display = 'block';
-        const entry = document.createElement('div');
-        entry.style.color = color;
-        entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${msg}`;
-        content.insertBefore(entry, content.firstChild);
-    }
-
-    async function updateMapAR() {
-        if (!window.XRi) return;
-        
-        const mapData = maps[currentIndex];
-        document.getElementById('map-name').innerText = "Caricamento...";
-        
-        log(`Richiesta Spawn: ${mapData.id}`);
-        XRi.clearAll();
-
-        currentMapInstance = await XRi.spawn(mapData.id, mapData.glb, 0.5, { x: 0, y: -20, z: 0 });
-
-        await currentMapInstance.setPosition({ x: 0, y: 1, z: 0.5 }, 0);
-        
-        await currentMapInstance.resetRotation(0);
-        
-        currentMapInstance.setGrabbable(false);
-        
-        document.getElementById('map-name').innerText = mapData.name;
-
-        if (!isRotating) startRotationLoop();
-    }
-
-    async function startRotationLoop() {
-        isRotating = true;
-        while (true) {
-            if (currentMapInstance) {
-                await currentMapInstance.rotate(180, 5);
-            } else {
-                await new Promise(r => setTimeout(r, 500));
-            }
+            const overlay = document.getElementById('debug-overlay');
+            const content = document.getElementById('debug-content');
+            overlay.style.display = 'block';
+            const entry = document.createElement('div');
+            entry.style.color = color;
+            entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${msg}`;
+            content.insertBefore(entry, content.firstChild);
         }
-    }
 
-    function changeMap(dir) {
-        currentIndex = (currentIndex + dir + maps.length) % maps.length;
-        updateMapAR();
-    }
+        let local_url = new URLSearchParams(window.location.search);
+        let local_debug = local_url.get('debug') || true;
+        log('debug:'+local_debug);
+        log('debug:'+local_url);
 
-    function launchGame() {
-        window.location = "/XRi-game-example/personaggi.html?debug=true";
-    }
+        // Database degli assets da pre-caricare
+        const RAW_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/";
+        const assetsToLoad = [
+            // Mappe
+            { id: 'swamp', url: RAW_BASE + 'maps/swamp_location.glb' },
+            { id: 'sand',  url: RAW_BASE + 'maps/sands_location.glb' },
+            { id: 'crypt', url: RAW_BASE + 'maps/crypt_location.glb' },
+            // Eroi
+            { id: 'archer', url: RAW_BASE + 'playable/archer.glb' },
+            { id: 'knight', url: RAW_BASE + 'playable/knight.glb' },
+            { id: 'troll',  url: RAW_BASE + 'playable/troll.glb' }
+        ];
 
-    window.onload = () => {
-        if (XRi.isReady) {
+        function updateUI(percent, text) {
+            document.getElementById('progress-bar').style.width = percent + "%";
+            document.getElementById('status-text').innerText = text;
+        }
+
+        async function startPreload() {
             XRi.initMultiplayer();
-            XRi.noCache();
-            updateMapAR();
+            XRi.clearAll(); 
+            
+            const total = assetsToLoad.length;
+            updateUI(0, "Inizio download assets...");
+
+            for (let i = 0; i < assetsToLoad.length; i++) {
+                const asset = assetsToLoad[i];
+                const currentProgress = Math.round((i / total) * 100);
+                
+                updateUI(currentProgress, `Scaricamento: ${asset.id}...`);
+                
+                try {
+                    await XRi.spawn(asset.id, asset.url, 0.01, { x: 0, y: -50, z: 0 });
+                    
+                    // Segnamo l'asset come pronto
+                    localStorage.setItem(`ready_${asset.id}`, "true");
+                    
+                    log(`[OK] ${asset.id} caricato in Unity`, "#00ff00");
+                } catch (err) {
+                    log(`[ERR] Fallito caricamento ${asset.id}`, "#ff0000");
+                }
+            }
+
+            // Fine di tutto
+            updateUI(100, "TUTTI GLI ASSETS PRONTI!");
+            
+            setTimeout(() => {
+                window.location.href = "maps.html?debug=true";
+            }, 1200);
         }
-    };
-</script>
+
+        window.onload = () => {
+            localStorage.clear();
+
+            const checkReady = () => {
+                if (window.XRi && XRi.isReady) {
+                    startPreload();
+                } else {
+                    setTimeout(checkReady, 100);
+                }
+            };
+            checkReady();
+        };
+    </script>
 </body>
 </html>

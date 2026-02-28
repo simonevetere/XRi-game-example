@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>XRi - Selezione Mondo</title>
+    <script src="https://xri.onl/XRi.js?v=c"></script>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { 
+            margin: 0; padding: 0; width: 100vw; height: 100vh; 
+            overflow: hidden; background-color: #000;
+            font-family: 'Segoe UI', sans-serif; color: white;
+        }
+
+        #fantasy-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('assets/img/background.png');
+            background-size: cover; background-position: center;
+            filter: brightness(0.3); z-index: 1;
+        }
+
+        #ui-layer {
+            position: relative; z-index: 10;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 0%, rgba(0,0,0,0.4) 100%);
+        }
+
+        h1 { font-size: 3rem; text-shadow: 0 0 20px #00d1ff; margin-bottom: 40px; }
+        .carousel-container { display: flex; align-items: center; gap: 40px; }
+        .arrow { font-size: 10rem; color: #00d1ff; cursor: pointer; transition: 0.3s; user-select: none; }
+        .arrow:hover { transform: scale(1.2); color: white; }
+        .map-name { font-size: 2.5rem; color: #00d1ff; margin-top: 20px; font-weight: bold; }
+        
+        .btn-enter {
+            margin-top: 40px; padding: 20px 80px; font-size: 1.8rem;
+            background: #00d1ff; color: black; border: none; border-radius: 50px;
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 0 30px rgba(0, 209, 255, 0.5);
+        }
+
+        /* DEBUG OVERLAY - OTTIMIZZATO PER VISORE */
+        #debug-overlay {
+            display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; 
+            background:rgba(0,0,0,0.95); z-index:9999; padding:40px; 
+            color: #00ff00; font-family: monospace; overflow-y: auto; 
+            border: 10px solid red; font-size: 2rem; line-height: 1.4;
+        }
+
+        .debug-close-btn {
+            position: fixed; top: 20px; right: 20px; padding: 20px 40px;
+            background: #ff4444; color: white; font-size: 2rem;
+            border: none; border-radius: 15px; cursor: pointer; z-index: 10000;
+        }
+
+        .reload-btn {
+            position: fixed; bottom: 20px; right: 20px; padding: 20px 40px;
+            background: #ff4444; color: white; font-size: 2rem;
+            border: none; border-radius: 15px; cursor: pointer; z-index: 10000;
+        }
+
+        #debug-content div {
+            border-bottom: 1px solid #444; margin-bottom: 15px; padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="fantasy-bg"></div>
+
+    <div id="ui-layer">
+        <h1>SCEGLI LA MAPPA</h1>
+        
+        <div id="debug-overlay">
+            <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
+            <div id="debug-content" style="margin-top: 100px;"></div>
+        </div>
+
+        <div class="carousel-container">
+            <div class="arrow" onclick="changeMap(-1)">&#10094;</div>
+            <div class="arrow"></div>
+            <div class="arrow" onclick="changeMap(1)">&#10095;</div>
+        </div>
+
+        <div class="map-name" id="map-name">SCORRI LE MAPPE</div>
+        <button class="btn-enter" onclick="launchGame()">ENTRA</button>
+        <button class="reload-btn" onclick="localStorage.clear(); window.location.reload()">RELOAD</button>
+    </div>
+
+    <script>
+
+    let local_url = new URLSearchParams(window.location.search);
+    let local_debug = local_url.get('debug') || true;
+    log('debug:'+local_debug);
+    log('debug:'+local_url);
+
+    const RAW_MAPS_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/maps/";
+    const maps = [
+        { id: 'swamp', name: 'PALUDE', glb: RAW_MAPS_BASE + 'swamp_location.glb' },
+        { id: 'sand', name: 'DESERTO', glb: RAW_MAPS_BASE + 'sands_location.glb' },
+        { id: 'crypt', name: 'CRIPTA', glb: RAW_MAPS_BASE + 'crypt_location.glb' }
+    ];
+
+    let currentIndex = 0;
+    let currentMapInstance = null;
+    let isRotating = false;
+
+    function log(msg, color = "#00ff00") {
+        if(!local_debug) return;
+
+        const overlay = document.getElementById('debug-overlay');
+        const content = document.getElementById('debug-content');
+        overlay.style.display = 'block';
+        const entry = document.createElement('div');
+        entry.style.color = color;
+        entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${msg}`;
+        content.insertBefore(entry, content.firstChild);
+    }
+
+    async function updateMapAR() {
+        if (!window.XRi) return;
+        
+        const mapData = maps[currentIndex];
+        document.getElementById('map-name').innerText = "Caricamento...";
+        
+        log(`Richiesta Spawn: ${mapData.id}`);
+        XRi.clearAll();
+
+        currentMapInstance = await XRi.spawn(mapData.id, mapData.glb, 0.5, { x: 0, y: -20, z: 0 });
+
+        await currentMapInstance.setPosition({ x: 0, y: 1, z: 0.5 }, 0);
+        
+        await currentMapInstance.resetRotation(0);
+        
+        currentMapInstance.setGrabbable(false);
+        
+        document.getElementById('map-name').innerText = mapData.name;
+
+        if (!isRotating) startRotationLoop();
+    }
+
+    async function startRotationLoop() {
+        isRotating = true;
+        while (true) {
+            if (currentMapInstance) {
+                await currentMapInstance.rotate(180, 5);
+            } else {
+                await new Promise(r => setTimeout(r, 500));
+            }
+        }
+    }
+
+    function changeMap(dir) {
+        currentIndex = (currentIndex + dir + maps.length) % maps.length;
+        updateMapAR();
+    }
+
+    function launchGame() {
+        window.location = "/XRi-game-example/playable.html?debug=true";
+    }
+
+    window.onload = () => {
+        if (XRi.isReady) {
+            XRi.initMultiplayer();
+            XRi.noCache();
+            updateMapAR();
+        }
+    };
+</script>
+</body>
+</html>
