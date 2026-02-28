@@ -172,7 +172,7 @@
 
     function launchGame() {
         currentMapInstance.setPosition({ x: 0, y: -50, z: 0 }, 0);
-        window.location = `/XRi-game-example/playable.html?map=${maps[currentIndex].id}`;
+        window.location = `/XRi-game-example/playable.html??debug=true&map=${maps[currentIndex].id}`;
     }
 
     window.onload = () => {
