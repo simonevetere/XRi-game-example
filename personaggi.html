@@ -55,7 +55,7 @@
         #debug-content div {
             border-bottom: 1px solid #444; margin-bottom: 15px; padding-bottom: 10px;
         }
-        
+
         .reload-btn {
             position: fixed; bottom: 20px; right: 20px; padding: 20px 40px;
             background: #ff4444; color: white; font-size: 2rem;
@@ -70,7 +70,6 @@
     <div id="ui-layer">
         <h1 id="title-text">TOCCA L'EROE PER SCEGLIERE</h1>
         <div class="map-name" id="choice-text"></div>
-        <button class="btn-confirm" onclick="spawnAllHeroes()">START</button>
         <button class="btn-confirm" id="btn-confirm" onclick="confirmChoice()">CONFERMA SCELTA</button>
         <button class="reload-btn" onclick="window.location.reload()">RELOAD</button>
         
@@ -171,6 +170,7 @@
         const init = () => {
             XRi.initMultiplayer();
             XRi.noCache();
+            spawnAllHeroes();
         };
         if (window.XRi && XRi.isReady) init();
         else window.addEventListener('vuplexready', init);
