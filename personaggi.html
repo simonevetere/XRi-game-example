@@ -106,8 +106,9 @@
 
         for (const hero of heroes) {
             log(`Spawning ${hero.name}...`);
-            // Spawna a 10cm di distanza l'uno dall'altro (asse X)
-            const inst = await XRi.spawn(hero.id, hero.glb, 0.1, { x: hero.x, y: 1, z: 0.5 });
+            const inst = await XRi.spawn(hero.id, hero.glb, 0.1, , { x: 0, y: -20, z: 0 });
+
+            await inst.setPosition({ x: hero.x, y: 1, z: 0.5 }, 0);
             await inst.resetRotation(0);
             await inst.setGrabbable(true);
             await inst.startAnimation("");
@@ -120,8 +121,7 @@
         window.vuplex.addEventListener('message', (e) => {
             try {
                 const data = JSON.parse(e.data);
-                // Quando l'utente tocca/afferra un oggetto, Unity manda il comando GRAB o SELECT
-                if (data.type === "GRAB_START" || data.type === "OBJECT_SELECTED") {
+                if (data.type === "GRAB_START") {
                     handleSelection(data.id);
                 }
             } catch(err) {}
