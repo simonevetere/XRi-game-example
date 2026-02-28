@@ -108,19 +108,20 @@
     }
 
     async function spawnAllHeroes() {
-        log("Evocazione eroi...");
-        XRi.clearAll();
-
         for (const hero of heroes) {
-            log(`Spawning ${hero.name}...`);
-            const inst = await XRi.spawn(hero.id, hero.glb, 0.1,{ x: 0, y: -20, z: 0 });
+            const isReady = localStorage.getItem(`ready_${hero.id}`);
+            
+            if (isReady) {
+                log(`Link a ${hero.name} esistente...`);
+                heroInstances[hero.id] = XRi.getClassById(hero.id);
+            }
 
-            await inst.setPosition({ x: hero.x, y: 1, z: 0.5 }, 0);
-            await inst.resetRotation(0);
-            inst.startAnimation("");
-            heroInstances[hero.id] = inst;
+            await heroInstances[hero.id].setPosition({ x: hero.x, y: 1, z: 0.5 }, 0.5);
+            await heroInstances[hero.id].resetRotation(0);
+            heroInstances[hero.id].setGrabbable(true); // Fondamentale per handleSelection
+            heroInstances[hero.id].startAnimation("");
         }
-        log("Tutti gli eroi sono pronti.");
+        log("Tutti gli eroi schierati.");
     }
 
     window.addEventListener('vuplexready', () => {
@@ -147,34 +148,31 @@
     }
 
     async function handleSelection(heroId) {
-        if (selectedHeroId != heroId && selectedHeroId != null){
-            oldidhero = selectedHeroId;
-            selectedHeroId = null;
-            oldhero = hero[oldidhero];
-            oldhero.setPosition({ x: oldhero.x, y: 1, z: 0.5 }, 0.5);
+        if (selectedHeroId != null && selectedHeroId !== heroId) {
+            const oldHeroData = heroes.find(h => h.id === selectedHeroId);
+            const oldInst = heroInstances[selectedHeroId];
+            if (oldInst) {
+                oldInst.setPosition({ x: oldHeroData.x, y: 1, z: 0.5 }, 0.5);
+            }
         }
         
         selectedHeroId = heroId;
-        currentRotatingId = heroId;
         const heroData = heroes.find(h => h.id === heroId);
-        
+        const chosen = heroInstances[heroId];
+
         document.getElementById('title-text').innerText = "HAI SCELTO:";
         document.getElementById('choice-text').innerText = heroData.name;
         document.getElementById('btn-confirm').style.display = 'block';
 
         log(`Selezionato: ${heroData.name}`, "#ffff00");
 
-        // Elimina gli altri due
-        for (const hero of heroes) {
-            if (hero.id !== heroId) {
-                // Comando ipotetico per distruggere singolo oggetto o lo spostiamo lontano
-                //XRi._send({ command: "DESTROY_OBJECT", id: hero.id });
+        for (const h of heroes) {
+            if (h.id !== heroId) {
+                heroInstances[h.id].setPosition({ x: h.x, y: -50, z: 0.5 }, 0.5);
             }
         }
 
-        // Porta quello scelto al centro e raddrizzalo
-        const chosen = heroInstances[heroId];
-        await chosen.setPosition({ x: 0, y: 1, z: 0 }, 0.5);
+        await chosen.setPosition({ x: 0, y: 1, z: 0.3 }, 0.5);
         startRotationLoop(chosen);
     }
 
