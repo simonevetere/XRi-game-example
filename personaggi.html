@@ -147,7 +147,7 @@
     }
 
     async function handleSelection(heroId) {
-        if (selectedHeroId != heroId){
+        if (selectedHeroId != heroId && selectedHeroId != null){
             oldidhero = selectedHeroId;
             selectedHeroId = null;
             oldhero = hero[oldidhero];
