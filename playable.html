@@ -152,8 +152,8 @@
             const oldHeroData = heroes.find(h => h.id === selectedHeroId);
             const oldInst = heroInstances[selectedHeroId];
             if (oldInst) {
-                await oldInst.setPosition({ x: oldHeroData.x, y: 1, z: 0.5 }, 0.5);
                 oldInst.resetRotation(0);
+                await oldInst.setPosition({ x: oldHeroData.x, y: 1, z: 0.5 }, 0.5);
             }
         }
         

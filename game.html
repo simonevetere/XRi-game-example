@@ -77,7 +77,7 @@
     const mapId = urlParams.get('map');
     log('debug:'+mapId);
     log('debug:'+heroId);
-    
+
     function log(msg, color = "#00ff00") {
         if(!local_debug) return;
         const overlay = document.getElementById('debug-overlay');
@@ -103,10 +103,9 @@
         const hero = XRi.getClassById(heroId);
 
         if (map && hero) {
-            // 2. Setup Mappa (Centro stanza, scala 1:1)
             document.getElementById('status').innerText = "Posizionamento mappa...";
-            await map.setPosition({ x: 0, y: 0.5, z: 0.5 }, 0);
-            await map.zoom(1, 0.5);
+            await map.setPosition({ x: 0, y: 1, z: 0.8 }, 0);
+            await map.zoom(2, 0.5);
             await map.resetRotation(0);
             await map.setGrabbable(false);
             
@@ -116,7 +115,7 @@
             
             await hero.parent(mapId); 
             
-            await hero.setPosition({ x: 0, y: 0.1, z: 0 }, 0.5);
+            await hero.setPosition({ x: 0, y: 1.1, z: 0.8 }, 0.5);
             await hero.setGrabbable(true);
             
             log("Eroe collegato alla mappa.");
