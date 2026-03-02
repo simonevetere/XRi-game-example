@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kosky's Tavern</title>
-    <script src="https://xri.onl/XRi.js?v=c"></script>
+    <script src="https://xri.onl/XRi.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Metamorphous&display=swap" rel="stylesheet">
@@ -42,8 +42,10 @@
 <script>
 const params = getUrlParams();
 log('debug mode: ' + params.debug);
+const basePath = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? '' 
+    : '/XRi-game-example/';
 
-// Database degli assets da pre-caricare
 const RAW_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/";
 const assetsToLoad = [
     // Mappe
@@ -60,8 +62,6 @@ function updateUI(percent, text) {
 }
 
 async function startPreload() {
-    log('Avvio initMultiplayer...', "#ffff00");
-    XRi.initMultiplayer();
     XRi.clearAll(); 
     
     const total = assetsToLoad.length;
@@ -87,7 +87,7 @@ async function startPreload() {
 
     updateUI(100, "COMPLETATO");
     setTimeout(() => {
-        window.location.href = "/playable/name.html";
+        window.location.href = "/playable/name.html?" + window.location.search;
     }, 500);
 }
 
@@ -98,7 +98,23 @@ window.onload = () => {
     const maxAttempts = 20;
 
     const checkReady = () => {
-        if (window.XRi && XRi.isReady) {
+
+    if (window.XRi) {
+        if (!params["session"]) {
+            const newId = XRi.generateId().replace("id_", "");
+            
+            const newParams = new URLSearchParams(window.location.search);
+            newParams.set("session", newId);
+            
+            log("Redirecting to session: " + newId, "#ffff00");
+            window.location.href = window.location.pathname + "?" + newParams.toString();
+        } else if(attempts == 0){
+            log("Inizializzazione Multiplayer...", "#00ff00");
+            XRi.initMultiplayer();
+        }
+    }
+
+        if (XRi.isReady) {
             startPreload();
             document.getElementById('vr-overlay').style.display = 'none'; 
         } 
@@ -148,13 +164,12 @@ function closePopup() {
                 setTimeout(simulateDownload, 15);
             } else {
                 setTimeout(() => {
-                    window.location.href = "/XRi-game-example/playable/name.html?isXR=false";
+                    window.location.href = basePath + "playable/name.html" + window.location.search + "&isXR=false";
                 }, 500);
             }
         }
     }
 
-    XRi.initMultiplayer();
     simulateDownload();
 }
 </script>

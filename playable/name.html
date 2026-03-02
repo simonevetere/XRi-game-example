@@ -1,96 +1,96 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Kosky's Tavern</title>
-<script src="https://xri.onl/XRi.js?v=c"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Metamorphous&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../style/main.css">
-<link rel="stylesheet" href="../style/components.css">
-<link rel="stylesheet" href="../style/debug.css">
-<script src="../js/utils.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/index.js"></script>
-<style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kosky's Tavern</title>
+    <script src="https://xri.onl/XRi.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Metamorphous&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style/main.css">
+    <link rel="stylesheet" href="../style/components.css">
+    <link rel="stylesheet" href="../style/debug.css">
+    <script src="../js/utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/index.js"></script>
+    <style>
 
-.container {
-    width: 90%;
-    text-align: center;
-}
+    .container {
+        width: 90%;
+        text-align: center;
+    }
 
-/* Stile per l'input */
-.input-field {
-    width: 100%;
-    padding: 15px;
-    font-size: 1.2rem;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    outline: none;
-    box-sizing: border-box;
-    text-align: center;
-    font-family: "Metamorphous", serif;
-}
+    /* Stile per l'input */
+    .input-field {
+        width: 100%;
+        padding: 15px;
+        font-size: 1.2rem;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        outline: none;
+        box-sizing: border-box;
+        text-align: center;
+        font-family: "Metamorphous", serif;
+    }
 
-.input-field:focus {
-    border-color: #007bff;
-}
+    .input-field:focus {
+        border-color: #007bff;
+    }
 
-/* Contenitore della tastiera */
-.simple-keyboard {
-    max-width: 100%;
-    background-color: rgba(255, 255, 255, 0.9);
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
+    /* Contenitore della tastiera */
+    .simple-keyboard {
+        max-width: 100%;
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
 
 
-.simple-keyboard .hg-button {
-    flex-grow: 1;
-    max-width: none;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-}
-/* Ripristina il layout orizzontale della tastiera */
-.simple-keyboard.hg-theme-default {
-    background-color: rgba(255, 255, 255, 0.95);
-    padding: 10px;
-    border-radius: 10px;
-}
+    .simple-keyboard .hg-button {
+        flex-grow: 1;
+        max-width: none;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+    /* Ripristina il layout orizzontale della tastiera */
+    .simple-keyboard.hg-theme-default {
+        background-color: rgba(255, 255, 255, 0.95);
+        padding: 10px;
+        border-radius: 10px;
+    }
 
-/* Forza le righe a essere flessibili e orizzontali */
-.hg-row {
-    display: flex !important;
-    flex-direction: row !important;
-    margin-bottom: 5px;
-    justify-content: center;
-}
+    /* Forza le righe a essere flessibili e orizzontali */
+    .hg-row {
+        display: flex !important;
+        flex-direction: row !important;
+        margin-bottom: 5px;
+        justify-content: center;
+    }
 
-/* Definisce il bordo e lo stile dei singoli tasti */
-.hg-button {
-    flex-grow: 1;
-    height: 50px !important;
-    margin: 3px !important;
-    background: white !important;
-    border: 1px solid #ccc !important; /* Questo crea il bordo dei tasti */
-    border-radius: 5px !important;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    color: #333 !important;
-    box-shadow: 0 2px 2px rgba(0,0,0,0.1) !important;
-    cursor: pointer;
-}
+    /* Definisce il bordo e lo stile dei singoli tasti */
+    .hg-button {
+        flex-grow: 1;
+        height: 50px !important;
+        margin: 3px !important;
+        background: white !important;
+        border: 1px solid #ccc !important; /* Questo crea il bordo dei tasti */
+        border-radius: 5px !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        color: #333 !important;
+        box-shadow: 0 2px 2px rgba(0,0,0,0.1) !important;
+        cursor: pointer;
+    }
 
-/* Effetto al click */
-.hg-button:active {
-    background: #e0e0e0 !important;
-    transform: translateY(2px);
-}
-</style>
+    /* Effetto al click */
+    .hg-button:active {
+        background: #e0e0e0 !important;
+        transform: translateY(2px);
+    }
+    </style>
 </head>
 <body>
 
@@ -121,6 +121,10 @@
 <script>
 const params = getUrlParams();
 log('debug mode: ' + params.debug);
+const basePath = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? '' 
+    : '/XRi-game-example/';
+
 
 const Keyboard = window.SimpleKeyboard.default;
 
@@ -174,6 +178,8 @@ function onKeyPress(button) {
 
         manageStorage('save', newKey, playerName);
 
+        XRi._broadcast(`manageStorage('save', '${newKey}', '${playerName}');`);
+
         manageStorage('save', 'local_player', newKey);
 
         log(`Salvato: ${newKey} = ${playerName}`, "#00ff00");
@@ -183,7 +189,7 @@ function onKeyPress(button) {
             `Benvenuto ${playerName}! Sei pronto ad iniziare l'avventura con questo nome ?`, 
             {
                 textYes: "Avanti",
-                actionYes: () => { window.location.href = `/XRi-game-example/playable/species.html?isXR=${params.isXR !== "false"}`; },
+                actionYes: () => { window.location.href = `${basePath}/playable/species.html${window.location.search}&isXR=${params.isXR !== "false"}`; },
                 textNo: "Annulla",
                 actionNo: () => {
                     manageStorage('delete', newKey);
@@ -196,6 +202,7 @@ function onKeyPress(button) {
 
 window.onload = () => {
     const isXR = params.isXR !== "false";
+    if (window.XRi) XRi.initMultiplayer();
 };
 
 </script>
