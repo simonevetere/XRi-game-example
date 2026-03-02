@@ -132,6 +132,13 @@ const basePath = window.location.hostname === 'localhost' || window.location.hos
     ? '' 
     : '/XRi-game-example/';
 
+const heroes = [
+    { id: 'elf', name: 'ELF', x: -0.4 },
+    { id: 'dragonide', name: 'DRAGONIDE', x: -0.2 },
+    { id: 'knight', name: 'KNIGHT', x: 0.0 },
+    { id: 'troll', name: 'TROLL', x: 0.2 }
+];
+
 /**
  * Gestisce la selezione della specie
  */
@@ -201,10 +208,27 @@ function callback() {
     );
 }
 
+
+async function spawnAllHeroes() {
+    for (const hero of heroes) {
+        
+        heroInstances[hero.id] = XRi.getClassById(hero.id);
+        await heroInstances[hero.id].setVisible(true);
+        await heroInstances[hero.id].setPosition({ x: hero.x, y: 1, z: 0.5 }, 0);
+        await heroInstances[hero.id].resetRotation(0);
+        await heroInstances[hero.id].setGrabbable(true);
+        heroInstances[hero.id].startAnimation("");
+    }
+    log("Tutti gli eroi schierati.");
+}
+
+
 window.onload = () => {
     const isXR = params.isXR !== "false";
     if (window.XRi) XRi.initMultiplayer();
+    if(XRi.isReady) spawnAllHeroes();
 };
+
 </script>
 </body>
 </html>

@@ -51,7 +51,8 @@ const assetsToLoad = [
     // Mappe
     { id: 'village', url: RAW_BASE + 'maps/village.glb' },
     // Eroi
-    { id: 'archer', url: RAW_BASE + 'playable/archer.glb' },
+    { id: 'elf', url: RAW_BASE + 'playable/elf.glb' },
+    { id: 'dragonide', url: RAW_BASE + 'playable/dragonide.glb' },
     { id: 'knight', url: RAW_BASE + 'playable/knight.glb' },
     { id: 'troll',  url: RAW_BASE + 'playable/troll.glb' }
 ];
@@ -86,6 +87,11 @@ async function startPreload() {
     }
 
     updateUI(100, "COMPLETATO");
+
+    village = getClassById("village");
+    village.setVisible(true);
+    village.setPosition({ x: 0, y: 1, z: 0.8 }, 0);
+    
     setTimeout(() => {
         window.location.href = "/playable/name.html?" + window.location.search;
     }, 500);
