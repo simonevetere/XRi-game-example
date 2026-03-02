@@ -183,7 +183,7 @@ function onKeyPress(button) {
             `Benvenuto ${playerName}! Sei pronto ad iniziare l'avventura con questo nome ?`, 
             {
                 textYes: "Avanti",
-                actionYes: () => { window.location.href = `species.html?isXR=${params.isXR !== "false"}`; },
+                actionYes: () => { window.location.href = `/XRi-game-example/species.html?isXR=${params.isXR !== "false"}`; },
                 textNo: "Annulla",
                 actionNo: () => {
                     manageStorage('delete', newKey);
