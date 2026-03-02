@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kosky's Tavern</title>
+    <script src="https://xri.onl/XRi.js?v=c"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Metamorphous&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style/main.css">
+    <link rel="stylesheet" href="../style/components.css">
+    <link rel="stylesheet" href="../style/debug.css">
+    <script src="../js/utils.js"></script>
+    <style>
+        .container {
+            width: 90%;
+            text-align: center;
+            max-width: 800px;
+        }
+
+        /* Griglia per le opzioni delle specie */
+        .species-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .species-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .species-card:hover {
+            border-color: #700f0f;
+            background: rgba(112, 15, 15, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .species-card h3 {
+            margin: 0;
+            font-size: 2rem;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .species-card p {
+            margin: 10px 0 0;
+            font-size: 1rem;
+            color: #ddd;
+        }
+
+        /* Ottimizzazione per mobile/visore in verticale */
+        @media (max-width: 600px) {
+            .species-grid { grid-template-columns: 1fr; }
+            h2 { font-size: 3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Scegli la tua Stirpe</h2>
+    
+    <div class="species-grid">
+        <div class="species-card" onclick="selectSpecies('Elfo', 'Antica saggezza e maestria arcana.')">
+            <h3>Elfo</h3>
+            <p>Sintonizzato con la magia.</p>
+        </div>
+
+        <div class="species-card" onclick="selectSpecies('Draconide', 'Forza ancestrale e scaglie di drago.')">
+            <h3>Draconide</h3>
+            <p>Erede del soffio primordiale.</p>
+        </div>
+
+        <div class="species-card" onclick="selectSpecies('Orco', 'Potenza bruta e onore dei clan.')">
+            <h3>Orco</h3>
+            <p>Il ruggito della battaglia.</p>
+        </div>
+
+        <div class="species-card" onclick="selectSpecies('Umano', 'Determinazione e versatilità infinita.')">
+            <h3>Umano</h3>
+            <p>Lo spirito del guerriero.</p>
+        </div>
+    </div>
+</div>
+
+<div id="vr-overlay" class="overlay">
+    <div class="popup">
+        <h3></h3>
+        <p></p>
+        <div class="popup-buttons">
+            <button class="btn-no"></button>
+            <button class="btn-yes"></button>
+        </div>
+    </div>
+</div>
+
+<div id="debug-overlay">
+    <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
+    <div id="debug-content" style="margin-top: 100px;"></div>
+</div>
+
+<script>
+const params = getUrlParams();
+log('debug mode: ' + params.debug);
+
+/**
+ * Gestisce la selezione della specie
+ */
+function selectSpecies(name, description) {
+    log(`Selezionata specie: ${name}`);
+
+    mostraMessaggio(
+        name, 
+        `${description}\n\nConfermi di voler essere un ${name}?`, 
+        {
+            textYes: "Conferma",
+            textNo: "Annulla",
+            actionYes: () => {
+
+                const allData = getStorageData();
+
+                const playerKey = `${allData.local_player}_species`;
+                manageStorage('save', playerKey, name);
+
+                document.getElementById('vr-overlay').style.display = 'none';
+
+                setTimeout(() => {
+                    avanti()
+                }, 500);
+            }
+        }
+    );
+}
+
+function avanti() {
+    mostraMessaggio("Ottima scelta", "Il tuo viaggio sta per iniziare...", {
+        textYes: "Avanti",
+        actionYes: () => { 
+            // window.location.href = `game.html?isXR=${params.isXR !== "false"}`; 
+            alert("Qui caricherai il prossimo step!");
+        }
+    });
+}
+
+window.onload = () => {
+    const isXR = params.isXR !== "false";
+    log("Specie caricata. Modalità XR: " + isXR);
+};
+</script>
+</body>
+</html>

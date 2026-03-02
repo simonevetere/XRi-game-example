@@ -1,0 +1,30 @@
+/* Struttura Core e Font */
+body { 
+    margin: 0; 
+    padding: 0; 
+    width: 100vw;
+    height: 100vh; 
+    background-image: url('../assets/img/background.gif'); 
+    background-size: cover;
+    background-position: center;
+    color: white; 
+    font-family: "Metamorphous", serif;
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center;
+    overflow: hidden; /* Evita scroll nel visore */
+}
+
+.metamorphous-regular {
+    font-family: "Metamorphous", serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+h2 { 
+    color: #700f0f; 
+    text-shadow: 0 0 15px #ffffff; 
+    font-size: 5rem; 
+    margin-bottom: 30px; 
+}

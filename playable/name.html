@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kosky's Tavern</title>
+<script src="https://xri.onl/XRi.js?v=c"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Metamorphous&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style/main.css">
+<link rel="stylesheet" href="../style/components.css">
+<link rel="stylesheet" href="../style/debug.css">
+<script src="../js/utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/simple-keyboard@latest/build/index.js"></script>
+<style>
+
+.container {
+    width: 90%;
+    text-align: center;
+}
+
+/* Stile per l'input */
+.input-field {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.2rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    outline: none;
+    box-sizing: border-box;
+    text-align: center;
+    font-family: "Metamorphous", serif;
+}
+
+.input-field:focus {
+    border-color: #007bff;
+}
+
+/* Contenitore della tastiera */
+.simple-keyboard {
+    max-width: 100%;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+
+.simple-keyboard .hg-button {
+    flex-grow: 1;
+    max-width: none;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+/* Ripristina il layout orizzontale della tastiera */
+.simple-keyboard.hg-theme-default {
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 10px;
+    border-radius: 10px;
+}
+
+/* Forza le righe a essere flessibili e orizzontali */
+.hg-row {
+    display: flex !important;
+    flex-direction: row !important;
+    margin-bottom: 5px;
+    justify-content: center;
+}
+
+/* Definisce il bordo e lo stile dei singoli tasti */
+.hg-button {
+    flex-grow: 1;
+    height: 50px !important;
+    margin: 3px !important;
+    background: white !important;
+    border: 1px solid #ccc !important; /* Questo crea il bordo dei tasti */
+    border-radius: 5px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    color: #333 !important;
+    box-shadow: 0 2px 2px rgba(0,0,0,0.1) !important;
+    cursor: pointer;
+}
+
+/* Effetto al click */
+.hg-button:active {
+    background: #e0e0e0 !important;
+    transform: translateY(2px);
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>scegli il tuo nome</h2>
+    <input class="input-field" placeholder="Scrivi qui..." inputmode="none" />
+    
+    <div class="simple-keyboard"></div>
+</div>
+
+<div id="vr-overlay" class="overlay">
+    <div class="popup">
+        <h3></h3>
+        <p></p>
+        <div class="popup-buttons">
+            <button class="btn-no"></button>
+            <button class="btn-yes"></button>
+        </div>
+    </div>
+</div>
+
+
+<div id="debug-overlay">
+    <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
+    <div id="debug-content" style="margin-top: 100px;"></div>
+</div>
+
+<script>
+const params = getUrlParams();
+log('debug mode: ' + params.debug);
+
+const Keyboard = window.SimpleKeyboard.default;
+
+// Inizializzazione tastiera
+const myKeyboard = new Keyboard({
+    onChange: input => onChange(input),
+    onKeyPress: button => onKeyPress(button),
+    layout: {
+        'default': [
+            'q w e r t y u i o p',
+            'a s d f g h j k l',
+            'z x c v b n m {backspace}',
+            '{enter}'
+        ]
+    },
+    display: {
+        '{backspace}': '⌫',
+        '{enter}':'enter'
+    }
+});
+
+/**
+ * Sincronizza la tastiera con l'input
+ */
+document.querySelector(".input-field").addEventListener("input", event => {
+    myKeyboard.setInput(event.target.value);
+});
+
+function onChange(input) {
+    document.querySelector(".input-field").value = input;
+}
+
+function onKeyPress(button) {
+    if (button === "{enter}") {
+        const inputField = document.querySelector(".input-field");
+        const playerName = inputField.value.trim();
+
+        if (playerName === "") {
+            mostraMessaggio("Ops!", "Inserisci un nome prima di continuare", { textYes: "Ok" });
+            return;
+        }
+
+        const allData = getStorageData();
+        
+        let playerIndex = 1;
+        while (allData[`player_${playerIndex}`]) {
+            playerIndex++;
+        }
+
+        const newKey = `player_${playerIndex}`;
+
+        manageStorage('save', newKey, playerName);
+
+        manageStorage('save', 'local_player', newKey);
+
+        log(`Salvato: ${newKey} = ${playerName}`, "#00ff00");
+
+        mostraMessaggio(
+            "Nome Salvato", 
+            `Benvenuto ${playerName}! Sei pronto ad iniziare l'avventura con questo nome ?`, 
+            {
+                textYes: "Avanti",
+                actionYes: () => { window.location.href = `species.html?isXR=${params.isXR !== "false"}`; },
+                textNo: "Annulla",
+                actionNo: () => {
+                    manageStorage('delete', newKey);
+                    document.getElementById('vr-overlay').style.display = 'none';
+                }
+            }
+        );
+    }
+}
+
+window.onload = () => {
+    const isXR = params.isXR !== "false";
+};
+
+</script>
+</body>
+</html>

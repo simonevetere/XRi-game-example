@@ -3,144 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>XRi - Loading Assets</title>
+    <title>Kosky's Tavern</title>
     <script src="https://xri.onl/XRi.js?v=c"></script>
-    <style>
-        body { 
-            margin: 0; padding: 0; width: 100vw; height: 100vh; 
-            background-image: url('assets/img/background.png'); color: white; font-family: 'Segoe UI', sans-serif;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        
-        .loader-container { width: 80%; text-align: center; }
-        
-        h2 { color: #00d1ff; text-shadow: 0 0 15px #00d1ff; font-size: 2rem; margin-bottom: 30px; }
-
-        .progress-track {
-            width: 100%; height: 20px; background: #222;
-            border-radius: 10px; border: 1px solid #00d1ff; overflow: hidden;
-        }
-
-        .progress-fill {
-            width: 0%; height: 100%; background: #00d1ff;
-            box-shadow: 0 0 20px #00d1ff; transition: width 0.3s ease;
-        }
-
-        #status-text { margin-top: 20px; font-size: 1.2rem; color: #888; }
-        
-        /* DEBUG OVERLAY - OTTIMIZZATO PER VISORE */
-        #debug-overlay {
-            display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; 
-            background:rgba(0,0,0,0.95); z-index:9999; padding:40px; 
-            color: #00ff00; font-family: monospace; overflow-y: auto; 
-            border: 10px solid red; font-size: 2rem; line-height: 1.4;
-        }
-
-        .debug-close-btn {
-            position: fixed; top: 20px; right: 20px; padding: 20px 40px;
-            background: #ff4444; color: white; font-size: 2rem;
-            border: none; border-radius: 15px; cursor: pointer; z-index: 10000;
-        }
-
-        #debug-content div {
-            border-bottom: 1px solid #444; margin-bottom: 15px; padding-bottom: 10px;
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Metamorphous&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style/main.css">
+    <link rel="stylesheet" href="style/components.css">
+    <link rel="stylesheet" href="style/debug.css">
+    <script src="js/utils.js"></script>
 </head>
 <body>
 
-    <div class="loader-container">
-        <h2 id="main-title">CARICAMENTO ASSETS...</h2>
-        <div class="progress-track">
-            <div id="progress-bar" class="progress-fill"></div>
+<div class="loader-container">
+    <h2 id="main-title">Kosky's Tavern</h2>
+    <div class="progress-track">
+        <div id="progress-bar" class="progress-fill"></div>
+    </div>
+    <div id="status-text">Loading Unity...</div>
+</div>
+<div id="vr-overlay" class="overlay">
+    <div class="popup">
+        <h3></h3>
+        <p></p>
+        <div class="popup-buttons">
+            <button class="btn-no"></button>
+            <button class="btn-yes"></button>
         </div>
-        <div id="status-text">Inizializzazione Unity...</div>
     </div>
+</div>
 
+
+<div id="debug-overlay">
+    <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
+    <div id="debug-content" style="margin-top: 100px;"></div>
+</div>
+
+<script>
+const params = getUrlParams();
+log('debug mode: ' + params.debug);
+
+// Database degli assets da pre-caricare
+const RAW_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/";
+const assetsToLoad = [
+    // Mappe
+    { id: 'village', url: RAW_BASE + 'maps/village.glb' },
+    // Eroi
+    { id: 'archer', url: RAW_BASE + 'playable/archer.glb' },
+    { id: 'knight', url: RAW_BASE + 'playable/knight.glb' },
+    { id: 'troll',  url: RAW_BASE + 'playable/troll.glb' }
+];
+
+function updateUI(percent, text) {
+    document.getElementById('progress-bar').style.width = percent + "%";
+    document.getElementById('status-text').innerText = text;
+}
+
+async function startPreload() {
+    log('Avvio initMultiplayer...', "#ffff00");
+    XRi.initMultiplayer();
+    XRi.clearAll(); 
     
-    <div id="debug-overlay">
-        <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
-        <div id="debug-content" style="margin-top: 100px;"></div>
-    </div>
+    const total = assetsToLoad.length;
+    updateUI(0, "Inizializzazione download...");
 
-    <script>
-         function log(msg, color = "#00ff00") {
-            if(!local_debug) return;
+    for (let i = 0; i < assetsToLoad.length; i++) {
+        const asset = assetsToLoad[i];
+        const currentProgress = Math.round((i / total) * 100);
+        
+        updateUI(currentProgress, `Download: ${asset.id}...`);
+        
+        try {
+            current3d = await XRi.spawn(asset.id, asset.url, 0.1, { x: 0, y: -50, z: 0 });
 
-            const overlay = document.getElementById('debug-overlay');
-            const content = document.getElementById('debug-content');
-            overlay.style.display = 'block';
-            const entry = document.createElement('div');
-            entry.style.color = color;
-            entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${msg}`;
-            content.insertBefore(entry, content.firstChild);
-        }
-
-        let local_url = new URLSearchParams(window.location.search);
-        let local_debug = local_url.get('debug') || false;
-        log('debug:'+local_debug);
-        log('debug:'+local_url);
-
-        // Database degli assets da pre-caricare
-        const RAW_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/";
-        const assetsToLoad = [
-            // Mappe
-            { id: 'village', url: RAW_BASE + 'maps/village.glb' },
-            // Eroi
-            { id: 'archer', url: RAW_BASE + 'playable/archer.glb' },
-            { id: 'knight', url: RAW_BASE + 'playable/knight.glb' },
-            { id: 'troll',  url: RAW_BASE + 'playable/troll.glb' }
-        ];
-
-        function updateUI(percent, text) {
-            document.getElementById('progress-bar').style.width = percent + "%";
-            document.getElementById('status-text').innerText = text;
-        }
-
-        async function startPreload() {
-            XRi.initMultiplayer();
-            XRi.clearAll(); 
+            current3d.setVisible(false);
             
-            const total = assetsToLoad.length;
-            updateUI(0, "Inizio download assets...");
+            manageStorage('save', `${asset.id}`, "true");
+            log(`[OK] ${asset.id} pronto`, "#00ff00");
+        } catch (err) {
+            log(`[ERR] Fallito ${asset.id}`, "#ff0000");
+        }
+    }
 
-            for (let i = 0; i < assetsToLoad.length; i++) {
-                const asset = assetsToLoad[i];
-                const currentProgress = Math.round((i / total) * 100);
-                
-                updateUI(currentProgress, `Scaricamento: ${asset.id}...`);
-                
-                try {
-                    await XRi.spawn(asset.id, asset.url, 0.1, { x: 0, y: -50, z: 0 });
-                    
-                    localStorage.setItem(`ready_${asset.id}`, "true");
-                    
-                    log(`[OK] ${asset.id} caricato in Unity`, "#00ff00");
-                } catch (err) {
-                    log(`[ERR] Fallito caricamento ${asset.id}`, "#ff0000");
-                }
+    updateUI(100, "COMPLETATO");
+    setTimeout(() => {
+        window.location.href = "/playable/name.html";
+    }, 500);
+}
+
+window.onload = () => {
+    manageStorage('clear');
+
+    let attempts = 0;
+    const maxAttempts = 20;
+
+    const checkReady = () => {
+        if (window.XRi && XRi.isReady) {
+            startPreload();
+            document.getElementById('vr-overlay').style.display = 'none'; 
+        } 
+        else {
+            attempts++;
+            
+            if (attempts < maxAttempts) {
+                setTimeout(checkReady, 100);
+            } 
+            else {
+                mostraMessaggio(
+                    "🕶️ Visore non rilevato", 
+                    "Non abbiamo trovato un visore. Vuoi riprovare la scansione o continuare?", 
+                    {
+                        textNo: "Riprova Scansione",
+                        actionNo: () => { startPreload(); },
+                        textYes: "Continua comunque",
+                        actionYes: () => { closePopup(); }
+                    }
+                );
             }
+        }
+    };
 
-            // Fine di tutto
-            updateUI(100, "TUTTI GLI ASSETS PRONTI!");
-            
-            setTimeout(() => {
-                window.location.href = "maps.html";
-            }, 1200);
+    checkReady();
+};
+
+function closePopup() {
+    document.getElementById('vr-overlay').style.display = 'none';
+    
+    let agg = 0;
+
+    function simulateDownload() {
+
+        for (let i = 0; i < assetsToLoad.length; i++) {
+            const asset = assetsToLoad[i];    
+            manageStorage('save', `${asset.id}`, "true");
+            manageStorage('save', `url_${asset.id}`, asset.url);
+            log(`[OK] ${asset.id} pronto`, "#00ff00");
         }
 
-        window.onload = () => {
-            localStorage.clear();
+        if (agg <= 100) {
+            updateUI(agg, "download assets...");
+            agg += 1;
 
-            const checkReady = () => {
-                if (window.XRi && XRi.isReady) {
-                    startPreload();
-                } else {
-                    setTimeout(checkReady, 100);
-                }
-            };
-            checkReady();
-        };
-    </script>
+            if (agg <= 100) {
+                setTimeout(simulateDownload, 15);
+            } else {
+                setTimeout(() => {
+                    window.location.href = "/playable/name.html?isXR=false";
+                }, 500);
+            }
+        }
+    }
+
+    XRi.initMultiplayer();
+    simulateDownload();
+}
+</script>
 </body>
 </html>
