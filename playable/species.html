@@ -186,7 +186,7 @@ function startRotationLoop(obj) {
             return;
         }
         angle += 2;
-        obj.setRotation({ x: 0, y: angle, z: 0 }, 0.1);
+        obj.rotate(180, 5);
     }, 100);
 }
 
