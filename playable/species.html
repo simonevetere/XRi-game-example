@@ -219,7 +219,6 @@ function selectSpecies(name, description) {
     );
 }
 
-// --- INIZIALIZZAZIONE ---
 async function spawnAllHeroes() {
     for (const hero of heroes) {
         try {
@@ -229,6 +228,7 @@ async function spawnAllHeroes() {
             await current.setVisible(true);
             await current.setPosition({ x: hero.x, y: 1, z: 0.5 }, 0);
             await current.setGrabbable(true);
+            current.resetRotation(0.5);
             current.startAnimation(""); 
         } catch(e) { log(`Errore eroe ${hero.id}`); }
     }

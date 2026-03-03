@@ -85,3 +85,5 @@ const manageStorage = (action, key = null, value = null) => {
     entry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${msg}`;
     content.insertBefore(entry, content.firstChild);
 }
+
+window.log = log;
