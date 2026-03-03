@@ -219,20 +219,6 @@ function selectSpecies(name, description) {
     );
 }
 
-
-// --- GESTIONE MESSAGGI VUPLEX ---
-window.addEventListener('vuplexready', () => {
-    window.vuplex.addEventListener('message', (e) => {
-        try {
-            const data = JSON.parse(e.data);
-            // Quando l'utente "clicca" o "afferra" l'oggetto in Unity
-            if (data.type === "GRAB_START") {
-                handleSelection(data.id);
-            }
-        } catch(err) { log("Errore messaggio Unity"); }
-    });
-});
-
 // --- INIZIALIZZAZIONE ---
 async function spawnAllHeroes() {
     for (const hero of heroes) {
