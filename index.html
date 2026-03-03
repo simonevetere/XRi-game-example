@@ -64,50 +64,44 @@ function updateUI(percent, text) {
 
 async function startPreload() {
     XRi.clearAll(); 
-    
     const total = assetsToLoad.length;
-    
-    let speedMbps = "Calcolo...";
-    if (navigator.connection && navigator.connection.downlink) {
-        speedMbps = navigator.connection.downlink + " Mbps";
-    }
-
-    updateUI(0, `Inizializzazione... (Rete: ${speedMbps})`);
 
     for (let i = 0; i < assetsToLoad.length; i++) {
         const asset = assetsToLoad[i];
-        const currentProgress = Math.round((i / total) * 100);
-        
-        let assetSize = "N/A";
-        try {
-            const response = await fetch(asset.url, { method: 'HEAD' });
-            const bytes = response.headers.get('content-length');
-            if (bytes) {
-                assetSize = (bytes / (1024 * 1024)).toFixed(2) + " MB";
-            }
-        } catch (e) {
-            console.warn("Impossibile leggere peso per " + asset.id);
-        }
+        let assetBytes = 0;
+        let assetSizeStr = "N/A";
 
-        updateUI(
-            currentProgress, 
-            `Scarico: ${asset.id} (${assetSize}) - Net: ${speedMbps}`
-        );
-        
         try {
-            current3d = await XRi.spawn(asset.id, asset.url, 0.1, { x: 0, y: 1, z: 0.5 });
+            const res = await fetch(asset.url, { method: 'HEAD' });
+            assetBytes = parseInt(res.headers.get('content-length') || 0);
+            assetSizeStr = (assetBytes / (1024 * 1024)).toFixed(2) + " MB";
+        } catch (e) { console.warn("Errore HEAD"); }
 
-            //current3d.setVisible(false);
+        let secondsCounter = 0;
+        const monitorInterval = setInterval(() => {
+            const currentMbps = navigator.connection?.downlink || 1; // Default 1mbps se manca
+            const estimate = getDownloadEstimate(assetBytes, currentMbps, secondsCounter);
             
-            manageStorage('save', `${asset.id}`, "true");
-            log(`[OK] ${asset.id} pronto (${assetSize})`, "#00ff00");
+            updateUI(
+                Math.round((i / total) * 100), 
+                `Scarico ${asset.id}: ${estimate} - Vel: ${currentMbps}Mbps`
+            );
+            secondsCounter += 0.5;
+        }, 500);
+
+        try {
+            await XRi.spawn(asset.id, asset.url, 0.1, { x: 0, y: 1, z: 0.5 });
+            
+            clearInterval(monitorInterval); // Fermiamo il monitor, Unity ha finito
+            log(`[OK] ${asset.id} (${assetSizeStr})`, "#00ff00");
         } catch (err) {
-            log(`[ERR] Fallito ${asset.id}`, "#ff0000");
+            clearInterval(monitorInterval);
+            log(`[ERR] ${asset.id} fallito`, "#ff0000");
         }
     }
 
     updateUI(100, "COMPLETATO - Reindirizzamento...");
-
+    
     village = XRi.getClassById("village");
     village.setVisible(true);
     village.setPosition({ x: 0, y: 1, z: 0.8 }, 0);
@@ -115,6 +109,18 @@ async function startPreload() {
     setTimeout(() => {
         window.location.href = basePath + "playable/name.html" + window.location.search;
     }, 500);
+}
+
+function getDownloadEstimate(bytes, mbps, secondsElapsed) {
+    if (!bytes || !mbps || mbps <= 0) return "Calcolo...";
+    
+    const fileMb = (bytes * 8) / (1024 * 1024);
+    const estimatedTotalSeconds = fileMb / mbps;
+    
+    let percent = Math.round((secondsElapsed / estimatedTotalSeconds) * 100);
+    if (percent > 99) percent = 99;
+
+    return `${percent}% (ETA: ${Math.max(0, Math.round(estimatedTotalSeconds - secondsElapsed))}s)`;
 }
 
 window.onload = () => {
