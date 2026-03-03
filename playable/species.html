@@ -125,110 +125,105 @@
 </div>
 
 <script>
+let selectedHeroId = null;
+const heroInstances = {}; 
 const params = getUrlParams();
+const basePath = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '' : '/XRi-game-example/';
 
-log('debug mode: ' + params.debug);
-const basePath = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? '' 
-    : '/XRi-game-example/';
-
+// Configurazione Eroi (Sincronizzata con le tue Card)
 const heroes = [
-    { id: 'elf', name: 'ELF', x: -0.4 },
-    { id: 'dragonide', name: 'DRAGONIDE', x: -0.2 },
-    { id: 'knight', name: 'KNIGHT', x: 0.0 },
-    { id: 'troll', name: 'TROLL', x: 0.2 }
+    { id: 'elf', name: 'Elfo', desc: 'Saggezza e maestria arcana.', x: -0.4 },
+    { id: 'dragonide', name: 'Dragonide', desc: 'Erede del soffio primordiale.', x: -0.2 },
+    { id: 'knight', name: 'Guerriero', desc: 'Forza ancestrale e coraggio.', x: 0.0 },
+    { id: 'troll', name: 'Orco', desc: 'Potenza bruta e onore dei clan.', x: 0.2 }
 ];
 
 /**
- * Gestisce la selezione della specie
+ * Gestisce il comportamento fisico dell'eroe quando viene selezionato
  */
-function selectSpecies(name, description) {
-    log(`Selezionata specie: ${name}`);
-
-    mostraMessaggio(
-        name, 
-        `${description}\n\nConfermi di voler essere un ${name}?`, 
-        {
-            textYes: "Conferma",
-            textNo: "Annulla",
-            actionYes: () => {
-
-                const allData = getStorageData();
-
-                const playerKey = `${allData.local_player}_species`;
-                manageStorage('save', playerKey, name);
-
-                XRi._broadcast(`manageStorage('save', '${playerKey}', '${name}');`);
-
-                document.getElementById('vr-overlay').style.display = 'none';
-
-                setTimeout(() => {
-                    avanti()
-                }, 500);
-            }
+async function handleSelection(heroId) {
+    // 1. Se c'era un eroe selezionato in precedenza, lo rimettiamo a posto
+    if (selectedHeroId && selectedHeroId !== heroId) {
+        const oldHero = heroes.find(h => h.id === selectedHeroId);
+        const oldInst = heroInstances[selectedHeroId];
+        if (oldInst) {
+            await oldInst.setPosition({ x: oldHero.x, y: 1, z: 0.5 }, 0.5);
+            await oldInst.resetRotation(0.5);
         }
-    );
+    }
+
+    selectedHeroId = heroId;
+    const heroData = heroes.find(h => h.id === heroId);
+    const chosen = heroInstances[heroId];
+
+    if (!chosen) return;
+
+    log(`Focus su: ${heroData.name}`, "#ffff00");
+
+    // 2. Portiamo l'eroe scelto più vicino all'utente (Z: 0.3 invece di 0.5)
+    await chosen.setPosition({ x: 0, y: 1, z: 0.3 }, 0.5);
+    
+    // 3. Avviamo la rotazione di presentazione
+    startRotationLoop(chosen);
+
+    // 4. Mostriamo il popup sulla Webview dopo un brevissimo delay per l'effetto visivo
+    setTimeout(() => {
+        selectSpecies(heroData.name, heroData.desc);
+    }, 600);
 }
 
-function avanti() {
-    mostraMessaggio("Ottima scelta", "Il tuo viaggio sta per iniziare... Un ultima cosa, sei...", {
-        textYes: "Player",
-        actionYes: () => { 
-            // window.location.href = `basePath game.html?isXR=${params.isXR !== "false"}`; 
-            alert("Qui caricherai il prossimo step!");
-        },
-        textNo: "Master",
-        actionNo: () => {
-            let chackmaster = getStorageData();
-            if(!chackmaster["master_id"]){
-                manageStorage('save', "master_id", chackmaster.local_player);
-            } else {
-
-                document.getElementById('vr-overlay').style.display = 'none';
-
-                setTimeout(() => {
-                    callback()
-                }, 500);
-            }
+/**
+ * Loop di rotazione continua finché l'eroe è selezionato
+ */
+function startRotationLoop(obj) {
+    let angle = 0;
+    const interval = setInterval(() => {
+        // Se l'ID selezionato cambia o il popup viene chiuso, fermiamo il loop
+        if (selectedHeroId !== obj.id || document.getElementById('vr-overlay').style.display === 'none') {
+            clearInterval(interval);
+            return;
         }
+        angle += 2;
+        obj.setRotation({ x: 0, y: angle, z: 0 }, 0.1);
+    }, 100);
+}
+
+// --- GESTIONE MESSAGGI VUPLEX ---
+window.addEventListener('vuplexready', () => {
+    window.vuplex.addEventListener('message', (e) => {
+        try {
+            const data = JSON.parse(e.data);
+            // Quando l'utente "clicca" o "afferra" l'oggetto in Unity
+            if (data.type === "GRAB_START") {
+                handleSelection(data.id);
+            }
+        } catch(err) { log("Errore messaggio Unity"); }
     });
-}
+});
 
-function callback() {
-    let chackmaster = getStorageData();
-    let master_id = chackmaster.master_id;
-    let nome_master = chackmaster[master_id];
-
-    mostraMessaggio("Ops", " sembra che il master sia "+ nome_master, {
-        textYes: "Continua",
-        actionYes: () => { 
-            // window.location.href = `basePath game.html?isXR=${params.isXR !== "false"}`; 
-            alert("Qui caricherai il prossimo step!");
-        }}
-    );
-}
-
-
+// --- INIZIALIZZAZIONE ---
 async function spawnAllHeroes() {
     for (const hero of heroes) {
-        
-        current_hero = XRi.getClassById(hero.id);
-        current_hero.setVisible(true);
-        current_hero.setPosition({ x: hero.x, y: 1, z: 0.5 }, 0);
-        current_hero.resetRotation(0);
-        current_hero.setGrabbable(true);
-        current_hero.startAnimation("");
+        try {
+            heroInstances[hero.id] = XRi.getClassById(hero.id);
+            let current = heroInstances[hero.id];
+            
+            await current.setVisible(true);
+            await current.setPosition({ x: hero.x, y: 1, z: 0.5 }, 0);
+            await current.setGrabbable(true);
+            current.startAnimation(""); 
+        } catch(e) { log(`Errore eroe ${hero.id}`); }
     }
-    log("Tutti gli eroi schierati.");
 }
 
-
 window.onload = () => {
-    const isXR = params.isXR !== "false";
-    if (window.XRi) XRi.initMultiplayer();
-     setTimeout(() => {
-                    if(XRi.isReady) spawnAllHeroes();
-                }, 500);
+    const check = setInterval(() => {
+        if (window.XRi && XRi.isReady) {
+            clearInterval(check);
+            XRi.initMultiplayer();
+            spawnAllHeroes();
+        }
+    }, 200);
 };
 
 </script>
