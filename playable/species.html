@@ -226,7 +226,9 @@ async function spawnAllHeroes() {
 window.onload = () => {
     const isXR = params.isXR !== "false";
     if (window.XRi) XRi.initMultiplayer();
-    if(XRi.isReady) spawnAllHeroes();
+     setTimeout(() => {
+                    if(XRi.isReady) spawnAllHeroes();
+                }, 500);
 };
 
 </script>

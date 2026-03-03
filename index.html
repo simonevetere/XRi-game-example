@@ -66,27 +66,47 @@ async function startPreload() {
     XRi.clearAll(); 
     
     const total = assetsToLoad.length;
-    updateUI(0, "Inizializzazione download...");
+    
+    let speedMbps = "Calcolo...";
+    if (navigator.connection && navigator.connection.downlink) {
+        speedMbps = navigator.connection.downlink + " Mbps";
+    }
+
+    updateUI(0, `Inizializzazione... (Rete: ${speedMbps})`);
 
     for (let i = 0; i < assetsToLoad.length; i++) {
         const asset = assetsToLoad[i];
         const currentProgress = Math.round((i / total) * 100);
         
-        updateUI(currentProgress, `Download: ${asset.id}...`);
+        let assetSize = "N/A";
+        try {
+            const response = await fetch(asset.url, { method: 'HEAD' });
+            const bytes = response.headers.get('content-length');
+            if (bytes) {
+                assetSize = (bytes / (1024 * 1024)).toFixed(2) + " MB";
+            }
+        } catch (e) {
+            console.warn("Impossibile leggere peso per " + asset.id);
+        }
+
+        updateUI(
+            currentProgress, 
+            `Scarico: ${asset.id} (${assetSize}) - Net: ${speedMbps}`
+        );
         
         try {
-            current3d = await XRi.spawn(asset.id, asset.url, 0.1, { x: 0, y: -50, z: 0 });
+            current3d = await XRi.spawn(asset.id, asset.url, 0.1, { x: 0, y: 1, z: 0.5 });
 
-            current3d.setVisible(false);
+            //current3d.setVisible(false);
             
             manageStorage('save', `${asset.id}`, "true");
-            log(`[OK] ${asset.id} pronto`, "#00ff00");
+            log(`[OK] ${asset.id} pronto (${assetSize})`, "#00ff00");
         } catch (err) {
             log(`[ERR] Fallito ${asset.id}`, "#ff0000");
         }
     }
 
-    updateUI(100, "COMPLETATO");
+    updateUI(100, "COMPLETATO - Reindirizzamento...");
 
     village = XRi.getClassById("village");
     village.setVisible(true);
