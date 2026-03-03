@@ -92,7 +92,7 @@ async function startPreload() {
         try {
             await XRi.spawn(asset.id, asset.url, 0.1, { x: 0, y: 1, z: 0.5 });
             
-            clearInterval(monitorInterval); // Fermiamo il monitor, Unity ha finito
+            clearInterval(monitorInterval);
             log(`[OK] ${asset.id} (${assetSizeStr})`, "#00ff00");
         } catch (err) {
             clearInterval(monitorInterval);
@@ -101,7 +101,7 @@ async function startPreload() {
     }
 
     updateUI(100, "COMPLETATO - Reindirizzamento...");
-    
+
     village = XRi.getClassById("village");
     village.setVisible(true);
     village.setPosition({ x: 0, y: 1, z: 0.8 }, 0);
