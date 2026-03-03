@@ -106,11 +106,11 @@ async function startPreload() {
     updateUI(100, "COMPLETATO - Reindirizzamento...");
 
     village = XRi.getClassById("village");
-    village.setVisible(true);
-    village.resetRotation(1);
-    village.setGrabbable(false);
-    village.setScale(1,1);
-    village.setPosition({ x: 0, y: 1, z: 0.8 }, 0);
+    await village.setVisible(true);
+    await village.resetRotation(1);
+    await village.setGrabbable(false);
+    await village.setScale(1,1);
+    await village.setPosition({ x: 0, y: 1, z: 0.8 }, 0);
     
     setTimeout(() => {
         window.location.href = basePath + "playable/name.html" + window.location.search;
