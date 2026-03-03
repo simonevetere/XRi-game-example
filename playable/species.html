@@ -236,6 +236,44 @@ async function spawnAllHeroes() {
     }
 }
 
+function avanti() {
+    mostraMessaggio("Ottima scelta", "Il tuo viaggio sta per iniziare... Un ultima cosa, sei...", {
+        textYes: "Player",
+        actionYes: () => { 
+            // window.location.href = `basePath game.html?isXR=${params.isXR !== "false"}`; 
+            alert("Qui caricherai il prossimo step!");
+        },
+        textNo: "Master",
+        actionNo: () => {
+            let chackmaster = getStorageData();
+            if(!chackmaster["master_id"]){
+                manageStorage('save', "master_id", chackmaster.local_player);
+            } else {
+
+                document.getElementById('vr-overlay').style.display = 'none';
+
+                setTimeout(() => {
+                    callback()
+                }, 500);
+            }
+        }
+    });
+}
+
+function callback() {
+    let chackmaster = getStorageData();
+    let master_id = chackmaster.master_id;
+    let nome_master = chackmaster[master_id];
+
+    mostraMessaggio("Ops", " sembra che il master sia "+ nome_master, {
+        textYes: "Continua",
+        actionYes: () => { 
+            // window.location.href = `basePath game.html?isXR=${params.isXR !== "false"}`; 
+            alert("Qui caricherai il prossimo step!");
+        }}
+    );
+}
+
 window.onload = () => {
     const check = setInterval(() => {
         if (window.XRi && XRi.isReady) {

@@ -109,8 +109,8 @@ async function startPreload() {
     await village.setVisible(true);
     await village.resetRotation(1);
     await village.setGrabbable(false);
-    await village.setScale(1,1);
-    await village.setPosition({ x: 0, y: 1, z: 0.8 }, 0);
+    await village.setScale(0.8,1);
+    await village.setPosition({ x: 0, y: 1, z: 1 }, 0);
     
     setTimeout(() => {
         window.location.href = basePath + "playable/name.html" + window.location.search;
