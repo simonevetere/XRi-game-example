@@ -188,6 +188,38 @@ function startRotationLoop(obj) {
     }, 100);
 }
 
+/**
+ * Gestisce la selezione della specie
+ */
+function selectSpecies(name, description) {
+    log(`Selezionata specie: ${name}`);
+
+    mostraMessaggio(
+        name, 
+        `${description}\n\nConfermi di voler essere un ${name}?`, 
+        {
+            textYes: "Conferma",
+            textNo: "Annulla",
+            actionYes: () => {
+
+                const allData = getStorageData();
+
+                const playerKey = `${allData.local_player}_species`;
+                manageStorage('save', playerKey, name);
+
+                XRi._broadcast(`manageStorage('save', '${playerKey}', '${name}');`);
+
+                document.getElementById('vr-overlay').style.display = 'none';
+
+                setTimeout(() => {
+                    avanti()
+                }, 500);
+            }
+        }
+    );
+}
+
+
 // --- GESTIONE MESSAGGI VUPLEX ---
 window.addEventListener('vuplexready', () => {
     window.vuplex.addEventListener('message', (e) => {
