@@ -159,9 +159,6 @@ async function handleSelection(heroId) {
     if (!chosen) return;
 
     log(`Focus su: ${heroData.name}`, "#ffff00");
-
-    // 2. Portiamo l'eroe scelto più vicino all'utente (Z: 0.3 invece di 0.5)
-    await chosen.setPosition({ x: 0, y: 1, z: 0.3 }, 0.5);
     
     // 3. Avviamo la rotazione di presentazione
     startRotationLoop(chosen);
