@@ -276,9 +276,11 @@ function callback() {
 
 window.onload = () => {
     const check = setInterval(() => {
-        if (window.XRi && XRi.isReady) {
+        if (window.XRi) {
             clearInterval(check);
             XRi.initMultiplayer();
+        }
+        if(XRi.isReady){
             spawnAllHeroes();
         }
     }, 200);
