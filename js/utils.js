@@ -87,3 +87,40 @@ const manageStorage = (action, key = null, value = null) => {
 }
 
 window.log = log;
+
+window.addEventListener('load', () => {
+    const params = getUrlParams();
+    if (params.session) {
+        // Creazione del contenitore
+        const sessionBox = document.createElement('div');
+        sessionBox.id = 'session-display-box';
+        
+        // Stile del box (Nero, 30% width, 20% height, in alto a destra)
+        Object.assign(sessionBox.style, {
+            position: 'fixed',
+            top: '10px',
+            right: '10px',
+            width: '20%',
+            height: '10%',
+            backgroundColor: 'black',
+            color: '#00FF00',
+            zIndex: '9999',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '10px',
+            boxSizing: 'border-box',
+            overflow: 'hidden'
+        });
+
+        // Contenuto testuale con font differenziato per 0 e O
+        sessionBox.innerHTML = `
+            <div style="font-size: 3rem; font-family: 'Consolas', Courier, monospace; font-weight: bold; word-break: break-all; text-align: center;">
+             ID:${params.session}
+            </div>
+        `;
+
+        document.body.appendChild(sessionBox);
+    }
+});

@@ -84,27 +84,27 @@
 </head>
 <body>
 
-<h2>Scegli la tua Stirpe</h2>
+<h2>Scegli la tua Classe</h2>
 
 <div class="species-grid">
-    <div class="species-card" onclick="selectSpecies('Elfo', 'Saggezza e maestria arcana.')">
-        <h3>Elfo</h3>
-        <img src="../assets/img/elf.png">
+    <div class="species-card" onclick="selectSpecies('Guerriero', 'Maestria nelle armi e difesa d\'acciaio.')">
+        <h3>Guerriero</h3>
+        <img src="../assets/img/sword.png" alt="Guerriero">
     </div>
 
-    <div class="species-card" onclick="selectSpecies('Umano', 'Astuzia e coraggio.')">
-        <h3>Umano</h3>
-        <img src="../assets/img/knight.png">
+    <div class="species-card" onclick="selectSpecies('Ladro', 'Agilità, furtività e colpi rapidi.')">
+        <h3>Ladro</h3>
+        <img src="../assets/img/dagger.png" alt="Ladro">
     </div>
 
-    <div class="species-card" onclick="selectSpecies('Orco', 'Potenza bruta e onore dei clan.')">
-        <h3>Orco</h3>
-        <img src="../assets/img/orc.png">
+    <div class="species-card" onclick="selectSpecies('Mago', 'Potere arcano e controllo degli elementi.')">
+        <h3>Mago</h3>
+        <img src="../assets/img/stick.png" alt="Mago">
     </div>
 
-    <div class="species-card" onclick="selectSpecies('dragonide', 'Erede del soffio primordiale.')">
-        <h3>dragonide</h3>
-        <img src="../assets/img/dragon.png">
+    <div class="species-card" onclick="selectSpecies('Chierico', 'Potere divino per curare e proteggere.')">
+        <h3>Chierico</h3>
+        <img src="../assets/img/bell.png" alt="Chierico">
     </div>
 </div>
 
@@ -132,10 +132,10 @@ const basePath = window.location.hostname === 'localhost' || window.location.hos
 
 // Configurazione Eroi (Sincronizzata con le tue Card)
 const heroes = [
-    { id: 'elf', name: 'Elfo', desc: 'Saggezza e maestria arcana.', x: -0.4 },
-    { id: 'dragonide', name: 'Dragonide', desc: 'Erede del soffio primordiale.', x: -0.2 },
-    { id: 'knight', name: 'Umano', desc: 'Astuzia e coraggio.', x: 0.0 },
-    { id: 'troll', name: 'Orco', desc: 'Potenza bruta e onore dei clan.', x: 0.2 }
+    { id: 'sword', name: 'Guerriero', desc: 'Maestria nelle armi e difesa d\'acciaio', x: -0.4 },
+    { id: 'dagger', name: 'Ladro', desc: 'Agilità, furtività e colpi rapidi', x: -0.2 },
+    { id: 'stick', name: 'Mago', desc: 'Potere arcano e controllo degli elementi', x: 0.0 },
+    { id: 'bell', name: 'Chierico', desc: 'Potere divino per curare e proteggere', x: 0.2 }
 ];
 
 /**
@@ -203,7 +203,7 @@ function selectSpecies(name, description) {
 
                 const allData = getStorageData();
 
-                const playerKey = `${allData.local_player}_species`;
+                const playerKey = `${allData.local_player}_class`;
                 manageStorage('save', playerKey, name);
 
                 XRi._broadcast(`manageStorage('save', '${playerKey}', '${name}');`);
@@ -234,43 +234,8 @@ async function spawnAllHeroes() {
 }
 
 function avanti() {
-    mostraMessaggio("Ottima scelta", "Il tuo viaggio sta per iniziare... Un ultima cosa, sei...", {
-        textYes: "Player",
-        actionYes: () => { 
-            window.location.href = `${basePath}/playable/class.html${window.location.search}`; 
-        },
-        textNo: "Master",
-        actionNo: () => {
-            let chackmaster = getStorageData();
-            if(!chackmaster["master_id"]){
-                manageStorage('save', "master_id", chackmaster.local_player);
-                XRi._broadcast(`manageStorage('save', "master_id", "${chackmaster.local_player}")`);
-                window.location.href = `${basePath}/playable/class.html${window.location.search}`;
-            } else {
-
-                document.getElementById('vr-overlay').style.display = 'none';
-
-                setTimeout(() => {
-                    callback()
-                }, 500);
-            }
-        }
-    });
+    alert('Qui inserirai il prossimo step')
 }
-
-function callback() {
-    let chackmaster = getStorageData();
-    let master_id = chackmaster.master_id;
-    let nome_master = chackmaster[master_id];
-
-    mostraMessaggio("Ops", " sembra che il master sia "+ nome_master, {
-        textYes: "Continua",
-        actionYes: () => { 
-             window.location.href = `${basePath}/playable/class.html${window.location.search}`;
-        }}
-    );
-}
-
 window.onload = () => {
     const check = setInterval(() => {
         if (window.XRi) {

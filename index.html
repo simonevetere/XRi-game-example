@@ -111,10 +111,31 @@ async function startPreload() {
     await village.setGrabbable(false);
     await village.setScale(0.8,1);
     await village.setPosition({ x: 0, y: 1, z: 1 }, 0);
-    
-    setTimeout(() => {
-        window.location.href = basePath + "playable/name.html" + window.location.search;
-    }, 500);
+
+    if (!params["session"]) {
+        log("Nessuna sessione attiva nell'URL", "#ffff00");
+        
+        mostraMessaggio(
+            "Pronto a Entrare?", 
+            "Vuoi iniziare una nuova avventura o rientrare in una esistente?", 
+            {
+                textYes: "Nuova Avventura",
+                actionYes: () => {
+                    const newId = XRi.generateId().replace("id_", "");
+                    const newParams = new URLSearchParams(window.location.search);
+                    newParams.set("session", newId);
+                    manageStorage('delete', 'local_player'); 
+                    window.location.href = basePath + "playable/name.html?" + newParams.toString();
+                },
+                textNo: "Riconnetti / Unisciti",
+                actionNo: () => {
+                    window.location.href = basePath + "/reconnect.html" + window.location.search;
+                }
+            }
+        );
+    } else {
+        window.location.href = basePath + "/reconnect.html" + window.location.search;
+    }
 }
 
 function getDownloadEstimate(bytes, mbps, secondsElapsed) {
@@ -130,7 +151,11 @@ function getDownloadEstimate(bytes, mbps, secondsElapsed) {
 }
 
 window.onload = () => {
+    oldsessionplayer = getStorageData().local_player;
+
     manageStorage('clear');
+    
+    manageStorage('save', 'local_player', oldsessionplayer);
 
     let attempts = 0;
     const maxAttempts = 20;
@@ -138,18 +163,8 @@ window.onload = () => {
     const checkReady = () => {
 
     if (window.XRi) {
-        if (!params["session"]) {
-            const newId = XRi.generateId().replace("id_", "");
-            
-            const newParams = new URLSearchParams(window.location.search);
-            newParams.set("session", newId);
-            
-            log("Redirecting to session: " + newId, "#ffff00");
-            window.location.href = window.location.pathname + "?" + newParams.toString();
-        } else if(attempts == 0){
-            log("Inizializzazione Multiplayer...", "#00ff00");
-            XRi.initMultiplayer();
-        }
+        log("Inizializzazione Multiplayer...", "#00ff00");
+        XRi.initMultiplayer();
     }
 
         if (XRi.isReady) {
@@ -201,15 +216,45 @@ function closePopup() {
             if (agg <= 100) {
                 setTimeout(simulateDownload, 15);
             } else {
-                setTimeout(() => {
-                    window.location.href = basePath + "playable/name.html" + window.location.search + "&isXR=false";
-                }, 500);
+                if (!params["session"]) {
+                    log("Nessuna sessione attiva nell'URL", "#ffff00");
+                    
+                    mostraMessaggio(
+                        "Pronto a Entrare?", 
+                        "Vuoi iniziare una nuova avventura o rientrare in una esistente?", 
+                        {
+                            textYes: "Nuova Avventura",
+                            actionYes: () => {
+                                const newId = XRi.generateId().replace("id_", "");
+                                const newParams = new URLSearchParams(window.location.search);
+                                newParams.set("session", newId);
+                                manageStorage('delete', 'local_player'); 
+                                window.location.href = basePath + "playable/name.html?" + newParams.toString();
+                            },
+                            textNo: "Riconnetti / Unisciti",
+                            actionNo: () => {
+                                window.location.href = basePath + "/reconnect.html" + window.location.search;
+                            }
+                        }
+                    );
+                } else {
+                    window.location.href = basePath + "/reconnect.html" + window.location.search;
+                }
             }
         }
     }
 
     simulateDownload();
 }
+
+window.onerror = function(message, source, lineno, colno, error) {
+    const errorMsg = `[JS ERR] ${message} (riga ${lineno}:${colno})`;
+    if (window.XRi) {
+        window.XRi._broadcast(`window.XRi._safeLog("${errorMsg}", "#ff0000");`);
+        window.XRi._safeLog(errorMsg, "#ff0000");
+    }
+    return false;
+};
 </script>
 </body>
 </html>

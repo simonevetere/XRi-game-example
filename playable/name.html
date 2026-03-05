@@ -189,7 +189,7 @@ function onKeyPress(button) {
             `Benvenuto ${playerName}! Sei pronto ad iniziare l'avventura con questo nome ?`, 
             {
                 textYes: "Avanti",
-                actionYes: () => { window.location.href = `${basePath}/playable/species.html${window.location.search}&isXR=${params.isXR !== "false"}`; },
+                actionYes: () => { window.location.href = `${basePath}/playable/species.html${window.location.search}`; },
                 textNo: "Annulla",
                 actionNo: () => {
                     manageStorage('delete', newKey);
@@ -201,7 +201,6 @@ function onKeyPress(button) {
 }
 
 window.onload = () => {
-    const isXR = params.isXR !== "false";
     if (window.XRi) XRi.initMultiplayer();
 };
 
