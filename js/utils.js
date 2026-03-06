@@ -102,7 +102,7 @@ window.addEventListener('load', () => {
             right: '10px',
             width: '20%',
             height: '10%',
-            backgroundColor: 'black',
+            backgroundColor: 'transparent',
             color: '#00FF00',
             zIndex: '9999',
             display: 'flex',
