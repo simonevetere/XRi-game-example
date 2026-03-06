@@ -114,10 +114,10 @@ async function startPreload() {
     village = XRi.getClassById("village");
     await village.setVisible(true);
     await village.resetRotation(1);
-    await village.rotate(180);
+    await village.rotate(90);
     await village.setGrabbable(false);
     await village.setScale(0.8,1);
-    await village.setPosition({ x: 0, y: 1, z: 1 }, 0);
+    await village.setPosition({ x: 0, y: 1, z: 0.5 }, 0);
 
     if (!params["session"]) {
         log("Nessuna sessione attiva nell'URL", "#ffff00");
