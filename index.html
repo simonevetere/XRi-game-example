@@ -60,7 +60,7 @@ const assetsToLoad = [
     { id: 'sword', url: RAW_BASE + 'obj/sword.glb' },
     { id: 'dagger', url: RAW_BASE + 'obj/dagger.glb' },
     { id: 'stick', url: RAW_BASE + 'obj/stick.glb' },
-    { id: 'sword',  url: RAW_BASE + 'obj/sword.glb' },
+    { id: 'sword',  url: RAW_BASE + 'obj/sword.glb' }
 ];
 
 function updateUI(percent, text) {
@@ -114,6 +114,7 @@ async function startPreload() {
     village = XRi.getClassById("village");
     await village.setVisible(true);
     await village.resetRotation(1);
+    await village.rotate(180);
     await village.setGrabbable(false);
     await village.setScale(0.8,1);
     await village.setPosition({ x: 0, y: 1, z: 1 }, 0);

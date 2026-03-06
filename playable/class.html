@@ -138,17 +138,24 @@ const heroes = [
     { id: 'bell', name: 'Chierico', desc: 'Potere divino per curare e proteggere', x: 0.2 }
 ];
 
+let currentRotationInterval = null;
+
 /**
  * Gestisce il comportamento fisico dell'eroe quando viene selezionato
  */
 async function handleSelection(heroId) {
-    // 1. Se c'era un eroe selezionato in precedenza, lo rimettiamo a posto
     if (selectedHeroId && selectedHeroId !== heroId) {
+        if (currentRotationInterval) {
+            clearInterval(currentRotationInterval);
+            currentRotationInterval = null;
+        }
+
         const oldHero = heroes.find(h => h.id === selectedHeroId);
         const oldInst = heroInstances[selectedHeroId];
+        
         if (oldInst) {
+            await oldInst.resetRotation(0.5); 
             await oldInst.setPosition({ x: oldHero.x, y: 1, z: 0.5 }, 0.5);
-            await oldInst.resetRotation(0.5);
         }
     }
 
@@ -160,33 +167,30 @@ async function handleSelection(heroId) {
 
     log(`Focus su: ${heroData.name}`, "#ffff00");
     
-    // 3. Avviamo la rotazione di presentazione
-    startRotationLoop(chosen);
+    startRotationLoop(chosen, heroId);
 
-    // 4. Mostriamo il popup sulla Webview dopo un brevissimo delay per l'effetto visivo
     setTimeout(() => {
         selectSpecies(heroData.name, heroData.desc);
     }, 600);
 }
 
-window.handleSelection = handleSelection;
-
 /**
- * Loop di rotazione continua finché l'eroe è selezionato
+ * Loop di rotazione continua
  */
-function startRotationLoop(obj) {
-    let angle = 0;
-    const interval = setInterval(() => {
-        // Se l'ID selezionato cambia o il popup viene chiuso, fermiamo il loop
-        if (selectedHeroId !== obj.id || document.getElementById('vr-overlay').style.display === 'none') {
-            clearInterval(interval);
+function startRotationLoop(obj, heroId) {
+    if (currentRotationInterval) clearInterval(currentRotationInterval);
+
+    currentRotationInterval = setInterval(() => {
+        const overlay = document.getElementById('vr-overlay');
+        if (selectedHeroId !== heroId || (overlay && overlay.style.display === 'none')) {
+            clearInterval(currentRotationInterval);
+            currentRotationInterval = null;
             return;
         }
-        angle += 2;
+        
         obj.rotate(180, 5);
     }, 100);
 }
-
 /**
  * Gestisce la selezione della specie
  */
