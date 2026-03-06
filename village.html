@@ -198,6 +198,7 @@
 const params = getUrlParams();
 const RAW_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/";
 let villageObj = null;
+const basePath = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '' : '/XRi-game-example/';
 
 async function initScene() {
     log("Caricamento villaggio...", "#ffff00");
@@ -283,10 +284,10 @@ function openTab(tabId) {
 
 // --- SISTEMA INVENTARIO ---
 const ITEM_DB = {
-    'spada':   { id: 'spada', name: 'Spada Lunga', type: 'arma', img: '../assets/img/sword.png' },
-    'pugnale': { id: 'pugnale', name: 'Pugnale Veloce', type: 'arma', img: '../assets/img/dagger.png' },
-    'bastone': { id: 'bastone', name: 'Bastone Arcano', type: 'arma', img: '../assets/img/stick.png' },
-    'campana': { id: 'campana', name: 'Campana Sacra', type: 'arma', img: '../assets/img/bell.png' }
+    'spada':   { id: 'spada', name: 'Spada Lunga', type: 'arma', img: '/assets/img/sword.png' },
+    'pugnale': { id: 'pugnale', name: 'Pugnale Veloce', type: 'arma', img: '/assets/img/dagger.png' },
+    'bastone': { id: 'bastone', name: 'Bastone Arcano', type: 'arma', img: '/assets/img/stick.png' },
+    'campana': { id: 'campana', name: 'Campana Sacra', type: 'arma', img: '/assets/img/bell.png' }
 };
 
 const backpackSize = 80; 
