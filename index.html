@@ -49,12 +49,18 @@ const basePath = window.location.hostname === 'localhost' || window.location.hos
 const RAW_BASE = "https://raw.githubusercontent.com/simonevetere/XRi-game-example/main/assets/3d/";
 const assetsToLoad = [
     // Mappe
-    { id: 'village', url: RAW_BASE + 'maps/village.glb' },
+    { id: 'village', url: RAW_BASE + 'maps/newvillage.glb' },
+    { id: 'tower_defense_map', url: RAW_BASE + 'maps/tower_defense_map.glb' },
     // Eroi
     { id: 'elf', url: RAW_BASE + 'playable/elf.glb' },
     { id: 'dragonide', url: RAW_BASE + 'playable/dragonide.glb' },
     { id: 'knight', url: RAW_BASE + 'playable/knight.glb' },
-    { id: 'troll',  url: RAW_BASE + 'playable/troll.glb' }
+    { id: 'troll',  url: RAW_BASE + 'playable/troll.glb' },
+    // obj
+    { id: 'sword', url: RAW_BASE + 'playable/sword.glb' },
+    { id: 'dagger', url: RAW_BASE + 'playable/dagger.glb' },
+    { id: 'stick', url: RAW_BASE + 'playable/stick.glb' },
+    { id: 'sword',  url: RAW_BASE + 'playable/sword.glb' },
 ];
 
 function updateUI(percent, text) {

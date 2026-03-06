@@ -147,8 +147,8 @@ async function handleSelection(heroId) {
         const oldHero = heroes.find(h => h.id === selectedHeroId);
         const oldInst = heroInstances[selectedHeroId];
         if (oldInst) {
-            await oldInst.setPosition({ x: oldHero.x, y: 1, z: 0.5 }, 0.5);
             await oldInst.resetRotation(0.5);
+            await oldInst.setPosition({ x: oldHero.x, y: 1, z: 0.5 }, 0.5);
         }
     }
 
