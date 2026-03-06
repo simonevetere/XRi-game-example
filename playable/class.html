@@ -126,7 +126,6 @@
 
 <script>
 let selectedHeroId = null;
-let currentRotationInterval = null; // Gestione globale del loop
 const heroInstances = {}; 
 const params = getUrlParams();
 const basePath = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '' : '/XRi-game-example/';
@@ -142,13 +141,6 @@ const heroes = [
  * Gestisce il comportamento fisico dell'eroe quando viene selezionato
  */
 async function handleSelection(heroId) {
-    // 1. Pulizia rotazione precedente
-    if (currentRotationInterval) {
-        clearInterval(currentRotationInterval);
-        currentRotationInterval = null;
-    }
-
-    // 2. Reset dell'eroe vecchio (se esiste)
     if (selectedHeroId && selectedHeroId !== heroId) {
         const oldHero = heroes.find(h => h.id === selectedHeroId);
         const oldInst = heroInstances[selectedHeroId];
@@ -166,8 +158,6 @@ async function handleSelection(heroId) {
 
     log(`Focus su: ${heroData.name}`, "#ffff00");
     
-    // 3. Avvio rotazione e popup
-    startRotationLoop(chosen, heroId);
 
     setTimeout(() => {
         selectSpecies(heroData.name, heroData.desc);
@@ -175,27 +165,6 @@ async function handleSelection(heroId) {
 }
 
 window.handleSelection = handleSelection;
-
-/**
- * Loop di rotazione sincronizzato
- */
-function startRotationLoop(obj, heroId) {
-    if (currentRotationInterval) clearInterval(currentRotationInterval);
-
-    currentRotationInterval = setInterval(() => {
-        const overlay = document.getElementById('vr-overlay');
-        
-        // Se l'eroe cambia o l'overlay viene chiuso esternamente, fermiamo tutto
-        if (selectedHeroId !== heroId || (overlay && overlay.style.display === 'none')) {
-            clearInterval(currentRotationInterval);
-            currentRotationInterval = null;
-            obj.resetRotation(0.5); // Torna dritto alla fine
-            return;
-        }
-        
-        obj.rotate(2, 0.05);
-    }, 50);
-}
 
 /**
  * Gestisce la conferma della Classe
@@ -215,11 +184,6 @@ function selectSpecies(name, description) {
                 manageStorage('save', playerKey, name);
                 XRi._broadcast(`manageStorage('save', '${playerKey}', '${name}');`);
 
-                // FERMIAMO la rotazione prima di procedere
-                if (currentRotationInterval) {
-                    clearInterval(currentRotationInterval);
-                    currentRotationInterval = null;
-                }
 
                 for (const h of heroes) {
                     const inst = heroInstances[h.id];
@@ -227,7 +191,6 @@ function selectSpecies(name, description) {
                         if (h.id !== selectedHeroId) {
                             await inst.setVisible(false);
                         } else {
-                            if (rotationInterval) clearInterval(rotationInterval);
                             await inst.resetRotation(0.2);
                             await inst.setPosition({ x: h.x, y: 1.1, z: 0.2 }, 0);
                         }
@@ -237,11 +200,6 @@ function selectSpecies(name, description) {
                 setTimeout(() => { avanti(); }, 500);
             },
             actionNo: () => {
-                // Se annulla, resettiamo e chiudiamo
-                if (currentRotationInterval) {
-                    clearInterval(currentRotationInterval);
-                    currentRotationInterval = null;
-                }
                 const chosen = heroInstances[selectedHeroId];
                 if (chosen) chosen.resetRotation(0.5);
                 
