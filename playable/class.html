@@ -126,11 +126,11 @@
 
 <script>
 let selectedHeroId = null;
+let currentRotationInterval = null; // Gestione globale del loop
 const heroInstances = {}; 
 const params = getUrlParams();
 const basePath = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '' : '/XRi-game-example/';
 
-// Configurazione Eroi (Sincronizzata con le tue Card)
 const heroes = [
     { id: 'sword', name: 'Guerriero', desc: 'Maestria nelle armi e difesa d\'acciaio', x: -0.4 },
     { id: 'dagger', name: 'Ladro', desc: 'Agilità, furtività e colpi rapidi', x: -0.2 },
@@ -138,24 +138,23 @@ const heroes = [
     { id: 'bell', name: 'Chierico', desc: 'Potere divino per curare e proteggere', x: 0.2 }
 ];
 
-let currentRotationInterval = null;
-
 /**
  * Gestisce il comportamento fisico dell'eroe quando viene selezionato
  */
 async function handleSelection(heroId) {
-    if (selectedHeroId && selectedHeroId !== heroId) {
-        if (currentRotationInterval) {
-            clearInterval(currentRotationInterval);
-            currentRotationInterval = null;
-        }
+    // 1. Pulizia rotazione precedente
+    if (currentRotationInterval) {
+        clearInterval(currentRotationInterval);
+        currentRotationInterval = null;
+    }
 
+    // 2. Reset dell'eroe vecchio (se esiste)
+    if (selectedHeroId && selectedHeroId !== heroId) {
         const oldHero = heroes.find(h => h.id === selectedHeroId);
         const oldInst = heroInstances[selectedHeroId];
-        
         if (oldInst) {
             await oldInst.resetRotation(0.5); 
-            await oldInst.setPosition({ x: oldHero.x, y: 1, z: 0.5 }, 0.5);
+            await oldInst.setPosition({ x: oldHero.x, y: 1.1, z: 0.5 }, 0.5);
         }
     }
 
@@ -167,6 +166,7 @@ async function handleSelection(heroId) {
 
     log(`Focus su: ${heroData.name}`, "#ffff00");
     
+    // 3. Avvio rotazione e popup
     startRotationLoop(chosen, heroId);
 
     setTimeout(() => {
@@ -174,49 +174,78 @@ async function handleSelection(heroId) {
     }, 600);
 }
 
+window.handleSelection = handleSelection;
+
 /**
- * Loop di rotazione continua
+ * Loop di rotazione sincronizzato
  */
 function startRotationLoop(obj, heroId) {
     if (currentRotationInterval) clearInterval(currentRotationInterval);
 
     currentRotationInterval = setInterval(() => {
         const overlay = document.getElementById('vr-overlay');
+        
+        // Se l'eroe cambia o l'overlay viene chiuso esternamente, fermiamo tutto
         if (selectedHeroId !== heroId || (overlay && overlay.style.display === 'none')) {
             clearInterval(currentRotationInterval);
             currentRotationInterval = null;
+            obj.resetRotation(0.5); // Torna dritto alla fine
             return;
         }
         
-        obj.rotate(180, 5);
-    }, 100);
+        obj.rotate(2, 0.05);
+    }, 50);
 }
+
 /**
- * Gestisce la selezione della specie
+ * Gestisce la conferma della Classe
  */
 function selectSpecies(name, description) {
-    log(`Selezionata specie: ${name}`);
-
     mostraMessaggio(
         name, 
         `${description}\n\nConfermi di voler essere un ${name}?`, 
         {
             textYes: "Conferma",
             textNo: "Annulla",
-            actionYes: () => {
-
+            actionYes: async () => {
                 const allData = getStorageData();
-
                 const playerKey = `${allData.local_player}_class`;
+                
+                // Salvataggio
                 manageStorage('save', playerKey, name);
-
                 XRi._broadcast(`manageStorage('save', '${playerKey}', '${name}');`);
 
-                document.getElementById('vr-overlay').style.display = 'none';
+                // FERMIAMO la rotazione prima di procedere
+                if (currentRotationInterval) {
+                    clearInterval(currentRotationInterval);
+                    currentRotationInterval = null;
+                }
 
-                setTimeout(() => {
-                    avanti()
-                }, 500);
+                for (const h of heroes) {
+                    const inst = heroInstances[h.id];
+                    if (inst) {
+                        if (h.id !== selectedHeroId) {
+                            await inst.setVisible(false);
+                        } else {
+                            if (rotationInterval) clearInterval(rotationInterval);
+                            await inst.resetRotation(0.2);
+                            await inst.setPosition({ x: hero.x, y: 1.1, z: 0.2 }, 0);
+                        }
+                    }
+                }
+
+                setTimeout(() => { avanti(); }, 500);
+            },
+            actionNo: () => {
+                // Se annulla, resettiamo e chiudiamo
+                if (currentRotationInterval) {
+                    clearInterval(currentRotationInterval);
+                    currentRotationInterval = null;
+                }
+                const chosen = heroInstances[selectedHeroId];
+                if (chosen) chosen.resetRotation(0.5);
+                
+                document.getElementById('vr-overlay').style.display = 'none';
             }
         }
     );
@@ -229,7 +258,7 @@ async function spawnAllHeroes() {
             let current = heroInstances[hero.id];
             
             await current.setVisible(true);
-            await current.setPosition({ x: hero.x, y: 1, z: 0.5 }, 0);
+            await current.setPosition({ x: hero.x, y: 1.1, z: 0.5 }, 0);
             await current.setGrabbable(true);
             current.resetRotation(0.5);
             current.startAnimation(""); 
@@ -238,20 +267,20 @@ async function spawnAllHeroes() {
 }
 
 function avanti() {
-    alert('Qui inserirai il prossimo step')
+    // Ora verrai reindirizzato o vedrai l'alert correttamente
+    alert('Classe confermata! Caricamento prossimo step...');
+    // window.location.href = ...
 }
+
 window.onload = () => {
     const check = setInterval(() => {
-        if (window.XRi) {
+        if (window.XRi && XRi.isReady) {
             clearInterval(check);
             XRi.initMultiplayer();
-        }
-        if(XRi.isReady){
             spawnAllHeroes();
         }
     }, 200);
 };
-
 </script>
 </body>
 </html>
