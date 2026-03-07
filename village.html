@@ -248,8 +248,9 @@ async function setupPlayer() {
     const modelId = modelMap[species] || 'knight';
 
     try {
-        const playerHero = getClassById(modelId);
+        const playerHero = XRi.getClassById(modelId);
         await playerHero.parent('village');
+        await playerHero.move({ x: 0, y: 0.3, z: 0 }, 0);
         await playerHero.setGravity(true);
         await playerHero.setGrabbable(true);
         
