@@ -243,6 +243,7 @@ async function setupPlayer() {
         const playerHero = getClassById(modelId);
         await playerHero.parent('village');
         await playerHero.setGravity(true);
+        await playerHero.setGrabbable(true);
         
         log("Eroe pronto sul campo!", "#00ff00");
         renderPlayerTable();
