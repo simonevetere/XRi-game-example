@@ -192,15 +192,23 @@
     </div>
 </div>
 
+
 <div id="vr-overlay" class="overlay">
     <div class="popup">
-        <h3></h3><p></p>
+        <h3></h3>
+        <p></p>
         <div class="popup-buttons">
             <button class="btn-no"></button>
             <button class="btn-yes"></button>
         </div>
     </div>
 </div>
+
+<div id="debug-overlay">
+    <button class="debug-close-btn" onclick="document.getElementById('debug-overlay').style.display='none'">CHIUDI</button>
+    <div id="debug-content" style="margin-top: 100px;"></div>
+</div>
+
 
 <script>
 // --- LOGICA GIOCO E XRi ---
