@@ -191,6 +191,17 @@ function selectSpecies(name, description) {
                         if (h.id !== selectedHeroId) {
                             await inst.setVisible(false);
                         } else {
+                            let _data = getStorageData();
+                            let _localKey = _data.local_player;
+                            let _species = (_data[`${_localKey}_species`] || 'knight').toLowerCase();
+
+                            let _modelMap = { 'elfo': 'elf', 'umano': 'knight', 'orco': 'troll', 'dragonide': 'dragonide' };
+                            let _modelId = _modelMap[_species] || 'knight';
+                            
+                            XRi.zoom(selectedHeroId,0.5);
+
+                            XRi.parent(selectedHeroId, _modelId);
+
                             await inst.resetRotation(0.2);
                             await inst.setPosition({ x: h.x, y: 1.1, z: 0.2 }, 0);
                         }
