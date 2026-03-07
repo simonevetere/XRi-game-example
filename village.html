@@ -59,14 +59,20 @@
         .equip-slot:hover { border-color: #ffcc00; }
         .equip-slot.selected { border-color: #00ff00; box-shadow: 0 0 20px rgba(0,255,0,0.5); }
         .equip-slot span { font-size: 1.2rem; text-transform: uppercase; font-weight: bold; position: absolute; z-index: 1; pointer-events: none; opacity: 0.5; }
-        
-        .equip-slot.head { width: 100px; height: 100px; border-radius: 10px; }
-        .equip-slot.large { width: 110px; height: 220px; border-radius: 10px; }
-        .equip-slot.x-large { width: 130px; height: 180px; border-radius: 10px; }
-        .equip-slot.medium { width: 130px; height: 60px; border-radius: 10px; }
+        /* EQUIPAGGIAMENTO: Dimensioni dinamiche in percentuale (vh) */
+        .equip-slot.head { width: 12vh; height: 12vh; border-radius: 1vh; }
+        .equip-slot.large { width: 14vh; height: 28vh; border-radius: 1vh; }
+        .equip-slot.x-large { width: 16vh; height: 22vh; border-radius: 1vh; }
+        .equip-slot.potion { width: 16vh; height: 8vh; border-radius: 1vh; }
 
-        .divider-vertical { width: 4px; background: #700f0f; border-radius: 2px; flex-shrink: 0; }
-
+        /* Divisorio dinamico */
+        .divider-vertical { 
+            width: 0.4vw; /* Larghezza in percentuale dello schermo */
+            min-width: 4px; /* Non diventa mai troppo sottile */
+            background: #700f0f; 
+            border-radius: 2px; 
+            flex-shrink: 0; 
+        }
         /* ZAINO E FILTRI (Scorrevole) */
         .backpack-section { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
         
@@ -140,7 +146,10 @@
                 <div class="equip-column">
                     <div class="equip-slot head" data-equip-type="testa" id="eq-testa" onclick="handleSlotClick('equip', 'testa')"><span>Testa</span></div>
                     <div class="equip-slot x-large" data-equip-type="torso" id="eq-torso" onclick="handleSlotClick('equip', 'torso')"><span>Torso</span></div>
-                    <div class="equip-slot medium" data-equip-type="cintura" id="eq-cintura" onclick="handleSlotClick('equip', 'cintura')"><span>Cintura</span></div>
+                    <div style="display: flex; gap: 2vh; justify-content: center;">
+                        <div class="equip-slot potion" data-equip-type="pozione" id="eq-pozione-1" onclick="handleSlotClick('equip', 'pozione-1')"><span>Poz.</span></div>
+                        <div class="equip-slot potion" data-equip-type="pozione" id="eq-pozione-2" onclick="handleSlotClick('equip', 'pozione-2')"><span>Poz.</span></div>
+                    </div>
                 </div>
                 <div class="equip-column">
                     <div class="equip-slot large" data-equip-type="arma" id="eq-arma-dx" onclick="handleSlotClick('equip', 'arma-dx')"><span>Arma Dx</span></div>
@@ -203,7 +212,9 @@ const basePath = window.location.hostname === 'localhost' || window.location.hos
 async function initScene() {
     log("Caricamento villaggio...", "#ffff00");
     try {
-        villageObj = await XRi.spawn('village', RAW_BASE + 'maps/newvillage.glb', 0.8, { x: 0, y: 1, z: 1 });
+        villageObj = getClassById("village");
+        await villageObj.setVisible(true);
+        await villageObj.setPosition({ x: 0, y: 1.1, z: 0.8 }, 0.5);
         await villageObj.setGrabbable(true);
         
         mostraMessaggio(
@@ -229,10 +240,9 @@ async function setupPlayer() {
     const modelId = modelMap[species] || 'knight';
 
     try {
-        const playerHero = await XRi.spawn('player_hero', RAW_BASE + `playable/${modelId}.glb`, 0.1, { x: 0, y: 1.5, z: 1 });
+        const playerHero = getClassById(modelId);
         await playerHero.parent('village');
         await playerHero.setGravity(true);
-        await playerHero.setGrabbable(true);
         
         log("Eroe pronto sul campo!", "#00ff00");
         renderPlayerTable();
@@ -284,15 +294,15 @@ function openTab(tabId) {
 
 // --- SISTEMA INVENTARIO ---
 const ITEM_DB = {
-    'spada':   { id: 'spada', name: 'Spada Lunga', type: 'arma', img: '/assets/img/sword.png' },
-    'pugnale': { id: 'pugnale', name: 'Pugnale Veloce', type: 'arma', img: '/assets/img/dagger.png' },
-    'bastone': { id: 'bastone', name: 'Bastone Arcano', type: 'arma', img: '/assets/img/stick.png' },
-    'campana': { id: 'campana', name: 'Campana Sacra', type: 'arma', img: '/assets/img/bell.png' }
+    'spada':   { id: 'spada', name: 'Spada Lunga', type: 'arma', img: 'assets/img/sword.png' },
+    'pugnale': { id: 'pugnale', name: 'Pugnale Veloce', type: 'arma', img: 'assets/img/dagger.png' },
+    'bastone': { id: 'bastone', name: 'Bastone Arcano', type: 'arma', img: 'assets/img/stick.png' },
+    'campana': { id: 'campana', name: 'Campana Sacra', type: 'arma', img: 'assets/img/bell.png' }
 };
 
 const backpackSize = 80; 
 let backpack = new Array(backpackSize).fill(null);
-let equipment = { 'arma-sx': null, 'arma-dx': null, 'testa': null, 'torso': null, 'cintura': null };
+let equipment = { 'arma-sx': null, 'arma-dx': null, 'testa': null, 'torso': null, 'pozione-1': null, 'pozione-2': null };
 
 // Popola oggetti finti per testare
 for(let i=0; i < 25; i++) {
@@ -424,7 +434,7 @@ renderPlayerTable();
 
 window.onload = () => {
     const check = setInterval(() => {
-        if (window.XRi && XRi.isReady) {
+        if (window.XRi) {
             clearInterval(check);
             XRi.initMultiplayer();
             initScene();
