@@ -96,7 +96,12 @@ async function startPreload() {
         }, 500);
 
         try {
-            current3d = await XRi.spawn(asset.id, asset.url, 0.1, { x: 0, y: 1, z: 0.5 });
+
+            if(asset.id == "village"){
+                current3d = await XRi.spawn(asset.id, asset.url, 0.1, { x: 0, y: 1, z: 0.5 }, { x: 0, y: 0, z: 0 }, true);
+            } else {
+                current3d = await XRi.spawn(asset.id, asset.url, 0.1, { x: 0, y: 1, z: 0.5 });
+            }
 
             current3d.setVisible(false);
 

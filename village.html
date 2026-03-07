@@ -212,7 +212,7 @@ const basePath = window.location.hostname === 'localhost' || window.location.hos
 async function initScene() {
     log("Caricamento villaggio...", "#ffff00");
     try {
-        villageObj = getClassById("village");
+        villageObj = XRi.getClassById("village");
         await villageObj.setVisible(true);
         await villageObj.setPosition({ x: 0, y: 1.1, z: 0.8 }, 0.5);
         await villageObj.setGrabbable(true);
