@@ -182,9 +182,8 @@ function selectSpecies(name, description) {
                 
                 // Salvataggio
                 manageStorage('save', playerKey, name);
+
                 XRi._broadcast(`manageStorage('save', '${playerKey}', '${name}');`);
-
-
                 for (const h of heroes) {
                     const inst = heroInstances[h.id];
                     if (inst) {
@@ -244,12 +243,15 @@ function avanti() {
 
 window.onload = () => {
     const check = setInterval(() => {
-        if (window.XRi && XRi.isReady) {
+        if (XRi.isReady) {
             clearInterval(check);
-            XRi.initMultiplayer();
             spawnAllHeroes();
         }
     }, 200);
+    
+    if(window.XRi){
+        XRi.initMultiplayer();
+    }
 };
 </script>
 </body>

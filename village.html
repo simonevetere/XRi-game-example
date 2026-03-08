@@ -447,9 +447,12 @@ window.onload = () => {
         if (window.XRi) {
             clearInterval(check);
             XRi.initMultiplayer();
+        }
+        if(XRi.isReady) {
             initScene();
         }
     }, 200);
+    setInterval(() => {renderPlayerTable()}, 200);
 };
 </script>
 </body>
